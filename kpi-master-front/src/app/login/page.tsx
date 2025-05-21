@@ -18,14 +18,16 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      const result = await response.json();
+      const resultText = await response.text();
 
-      if (!response.ok) throw new Error(result.message || 'Login failed');
+      if (!response.ok) throw new Error(resultText || 'Login failed');
 
       // ✅ Save JWT token
-      localStorage.setItem('token', result.token);
-      console.log(result.token)
+      localStorage.setItem('token', resultText);
+      console.log(resultText)
       alert('Login successful!');
+      router.push('/main');
+
       // router.push('/dashboard'); // or wherever you want to redirect
     } catch (error: any) {
       alert('Login failed: ' + error.message);
