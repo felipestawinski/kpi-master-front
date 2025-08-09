@@ -75,9 +75,10 @@ export default function ProfilePage() {
       const form = new FormData();
       form.append('profilePicture', file);
 
+
       const res = await fetch('http://localhost:8080/upload-picture', {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: token ? { Authorization: token } : {},
         body: form,
       });
 
@@ -87,7 +88,7 @@ export default function ProfilePage() {
       // If your backend returns the final URL of the stored image, parse it here:
       // const { url } = JSON.parse(text);
       // For now we’ll just keep using the local preview until you return a URL.
-      const finalUrlFromServer = null as string | null; // replace with parsed URL
+      const finalUrlFromServer = ""; // replace with parsed URL
 
       // Update localStorage copy so it persists across reloads
       const currentRaw = localStorage.getItem('user');
@@ -106,7 +107,7 @@ export default function ProfilePage() {
       } else if (finalUrlFromServer) {
         localStorage.setItem('profileImageUrl', finalUrlFromServer);
       }
-
+      localStorage.setItem('profileImageUrl', finalUrlFromServer);
       alert('Profile picture uploaded!');
       // Optional: if backend gives you a definitive URL, you might want to force-refresh:
       // router.refresh();
@@ -117,13 +118,14 @@ export default function ProfilePage() {
 
   if (loading) return <div className="p-10">Loading profile…</div>;
   if (!user) return <div className="p-10">No user info found.</div>;
+  const picture = localStorage.getItem('profileImageUrl') || '';
 
   return (
-    <div className="min-h-screen p-8 bg-gray-100">
+    <div className="p-8 bg-gray-100">
       <div className="max-w-3xl mx-auto bg-white p-6 shadow rounded">
         <div className="flex items-center gap-6">
           <img
-            src={'/default-avatar.png'}
+            src={picture}
             alt="Profile"
             className="w-24 h-24 rounded-full object-cover border"
           />
