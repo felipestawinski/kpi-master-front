@@ -22,9 +22,13 @@ export default function LoginPage() {
 
       if (!response.ok) throw new Error(resultText || 'Login failed');
 
-      // ✅ Save JWT token
-      localStorage.setItem('token', resultText);
-      console.log(resultText)
+      // ✅ Save JWT token and username
+      const payload = JSON.parse(resultText);
+      localStorage.setItem('token', payload.token);
+      localStorage.setItem('username', payload.username);
+      localStorage.setItem('institution',payload.institution )
+      localStorage.setItem('role',payload.role )
+      console.log("result text:" + resultText)
       alert('Login successful!');
       router.push('/main');
 
@@ -37,14 +41,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="p-8 bg-white shadow rounded-lg w-full max-w-md">
-        <h1 className="text-2xl font-semibold mb-4">Login</h1>
+        <h1 className="text-2xl font-semibold mb-4 text-amber-500">Login</h1>
         <form onSubmit={handleLogin}>
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full mb-3 px-3 py-2 border rounded"
+            className="w-full mb-3 px-3 py-2 border rounded placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-amber-500"
             required
           />
           <input
@@ -52,10 +56,10 @@ export default function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="w-full mb-3 px-3 py-2 border rounded"
+            className="w-full mb-3 px-3 py-2 border rounded placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-black"
             required
           />
-          <button type="submit" className="w-full py-2 bg-green-500 text-white rounded">
+          <button type="submit" className="w-full py-2 bg-amber-500 text-white rounded">
             Login
           </button>
         </form>
