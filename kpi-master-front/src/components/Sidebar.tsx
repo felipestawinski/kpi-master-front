@@ -32,7 +32,7 @@ export default function Sidebar() {
             Enviar documentos
           </button>
           <button
-            onClick={() => handleNavigation('/page4')}
+            onClick={() => handleNavigation('/permissions')}
             className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
           >
             Gerenciar usuários

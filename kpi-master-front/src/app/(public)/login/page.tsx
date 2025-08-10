@@ -28,6 +28,7 @@ export default function LoginPage() {
       localStorage.setItem('username', payload.username);
       localStorage.setItem('institution',payload.institution )
       localStorage.setItem('role',payload.role )
+      localStorage.setItem('profileImageUrl', payload.profileImageUrl || '' )
       console.log("result text:" + resultText)
       alert('Login successful!');
       router.push('/main');
