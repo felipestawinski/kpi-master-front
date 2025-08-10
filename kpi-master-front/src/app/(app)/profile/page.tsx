@@ -85,10 +85,13 @@ export default function ProfilePage() {
       const text = await res.text();
       if (!res.ok) throw new Error(text || 'Upload failed');
 
+      console.log('Upload response:', text);
+      const profileURL = JSON.parse(text).profilePicture;
+
       // If your backend returns the final URL of the stored image, parse it here:
       // const { url } = JSON.parse(text);
       // For now we’ll just keep using the local preview until you return a URL.
-      const finalUrlFromServer = ""; // replace with parsed URL
+      const finalUrlFromServer = profileURL; // replace with parsed URL
 
       // Update localStorage copy so it persists across reloads
       const currentRaw = localStorage.getItem('user');

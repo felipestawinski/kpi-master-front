@@ -14,7 +14,7 @@ export default function Sidebar() {
         <div className="w-64 bg-amber-500 text-white flex p-4 flex-col space-y-4">
           <h2 className="text-lg font-semibold mb-4">Navigation</h2>
           <button
-            onClick={() => handleNavigation('/page1')}
+            onClick={() => handleNavigation('/main')}
             className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
           >
             Página Inicial
@@ -26,7 +26,7 @@ export default function Sidebar() {
             Pesquisar documentos
           </button>
           <button
-            onClick={() => handleNavigation('/page3')}
+            onClick={() => handleNavigation('/upload')}
             className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
           >
             Enviar documentos
