@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type ApiFile = {
   id: number;
   filename: string;
   institution: string;
   writer: string;
-  date: string;        // e.g. "2025-03-10 20:56:06"
-  fileAddress: string; // URL to open
+  date: string;
+  fileAddress: string;
 };
 
 export default function SearchPage() {
@@ -16,69 +16,67 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const token = useMemo(
-    () => (typeof window !== 'undefined' ? localStorage.getItem('token') : null),
-    []
-  );
-  const username = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) return JSON.parse(raw)?.username ?? null;
-    } catch {}
-    return localStorage.getItem('username');
-  }, []);
+  // ✅ defer reading localStorage until after mount
+  const [username, setUsername] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchFiles = async () => {
-      if (!username) {
-        setError('No username found. Please log in again.');
-        setLoading(false);
-        return;
+    // runs only on client after hydration
+    try {
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser);
+        setUsername(parsed?.username ?? null);
+      } else {
+        setUsername(localStorage.getItem('username'));
       }
+      setToken(localStorage.getItem('token'));
+    } catch {
+      setUsername(null);
+      setToken(null);
+    }
+  }, []);
 
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchFiles = async () => {
+    if (!username) {
+      setError('No username found. Please log in again.');
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('http://localhost:8080/files', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ username }),
+      });
+      const data: ApiFile[] = await res.json(); // header is application/json
+      if (!res.ok) throw new Error('Failed to load files.');
+      setFiles(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setError(err.message || 'Error fetching files.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const res = await fetch('http://localhost:8080/files', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ username }),
-        });
-
-        // Header is application/json → parse as JSON
-        const data: ApiFile[] = await res.json();
-        if (!res.ok) {
-          throw new Error('Failed to load files.');
-        }
-
-        console.log(res)
-        console.log(data)
-        console.log(Array.isArray(data))
-
-        // Defensive: ensure array
-        setFiles(Array.isArray(data) ? data : []);
-      } catch (err: any) {
-        setError(err.message || 'Error fetching files.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFiles();
-  }, [token, username]);
+  // fetch once we have a username
+  useEffect(() => {
+    if (username !== null) {
+      fetchFiles();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username, token]);
 
   const formatDate = (s?: string) => {
     if (!s) return '-';
-    // s like "2025-03-10 20:56:06" → build a Date safely
     const [d, t] = s.split(' ');
-    if (!d || !t) return s;
-    const [y, m, day] = d.split('-').map(Number);
-    const [hh, mm, ss] = t.split(':').map(Number);
+    const [y, m, day] = (d || '').split('-').map(Number);
+    const [hh, mm, ss] = (t || '').split(':').map(Number);
     const dt = new Date(y, (m || 1) - 1, day || 1, hh || 0, mm || 0, ss || 0);
     return isNaN(dt.getTime()) ? s : dt.toLocaleString();
   };
@@ -90,11 +88,12 @@ export default function SearchPage() {
           <div>
             <h1 className="text-2xl font-semibold">Your Files</h1>
             <p className="text-sm text-gray-600">
-              Showing uploads for <span className="font-medium">{username ?? '-'}</span>
+              Showing uploads for{' '}
+              <span className="font-medium">{username ?? '-'}</span>
             </p>
           </div>
           <button
-            onClick={() => location.reload()}
+            onClick={fetchFiles}
             className="rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-gray-300 hover:bg-gray-50"
           >
             Refresh
