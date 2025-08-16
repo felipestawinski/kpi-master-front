@@ -11,6 +11,7 @@ type ApiFile = {
   fileAddress: string;
 };
 
+
 export default function SearchPage() {
   const [files, setFiles] = useState<ApiFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,13 +51,20 @@ export default function SearchPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(token ? { Authorization: `${token}` } : {}),
         },
         body: JSON.stringify({ username }),
       });
       const data: ApiFile[] = await res.json(); // header is application/json
+
       if (!res.ok) throw new Error('Failed to load files.');
+
+      console.log("Array.isArray(data)", Array.isArray(data));
+      console.log("data", data);
+      console.log("type of data", typeof data);
+
       setFiles(Array.isArray(data) ? data : []);
+      
     } catch (err: any) {
       setError(err.message || 'Error fetching files.');
     } finally {
@@ -70,7 +78,7 @@ export default function SearchPage() {
       fetchFiles();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username, token]);
+  }, [username]);
 
   const formatDate = (s?: string) => {
     if (!s) return '-';
@@ -128,6 +136,7 @@ export default function SearchPage() {
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
                 {files.map((f) => (
+                  console.log(typeof(f)),       
                   <tr key={f.id} className="hover:bg-gray-50">
                     <Td className="font-medium text-gray-900">{f.filename}</Td>
                     <Td>{f.institution}</Td>
