@@ -10,7 +10,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className=" w-64 bg-amber-500 text-white flex flex-col justify-between">
+    <div className=" w-64 bg-amber-500 text-white flex flex-col justify-between pt-8">
         <div className="w-64 bg-amber-500 text-white flex p-4 flex-col space-y-4">
 
           <button
@@ -39,7 +39,7 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <div className="w-64 bg-amber-500 text-white flex p-4 flex-col space-y-4">
+        <div className="w-64 bg-amber-500 text-white flex p-4 flex-col space-y-4 pb-8">
           <button
             onClick={() => {
               localStorage.removeItem('token');
