@@ -41,12 +41,13 @@ export default function MainPage() {
   };
 
   return (
-    <div className="flex">
+    <div className="flex ">
 
       {/* Main content */}
-      <div className="flex-1 p-8 bg-gray-100">
-        <h1 className="text-3xl font-semibold text-amber-500">Hello, {username}</h1>
-        <p className="mt-4 text-gray-700">Welcome to your dashboard.</p>
+      <div className="flex-1 p-8 bg-gray-100 flex items-center flex-col justify-center">
+        <h1 className="text-4xl font-semibold text-gray-600 ">Hello,</h1>
+        <h1 className="text-5xl font-semibold text-amber-500">{username}</h1>
+        <p className="text-3xl mt-4 text-gray-700">Welcome to your dashboard.</p>
       </div>
     </div>
   );
