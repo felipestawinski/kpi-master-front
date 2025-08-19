@@ -12,7 +12,7 @@ export default function Sidebar() {
   return (
     <div className=" w-64 bg-amber-500 text-white flex flex-col justify-between">
         <div className="w-64 bg-amber-500 text-white flex p-4 flex-col space-y-4">
-          <h2 className="text-lg font-semibold mb-4">Navigation</h2>
+
           <button
             onClick={() => handleNavigation('/main')}
             className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
@@ -45,7 +45,7 @@ export default function Sidebar() {
               localStorage.removeItem('token');
               router.push('/login');
             }}
-            className="mt-auto bg-red-600 hover:bg-red-500 p-3 rounded text-white"
+            className="mt-auto bg-amber-700 hover:bg-red-700 p-3 rounded text-white"
             >
               Logout
           </button>

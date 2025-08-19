@@ -41,7 +41,7 @@ export default function MainPage() {
   };
 
   return (
-    <div className="flex ">
+    <div className="flex min-h-screen">
 
       {/* Main content */}
       <div className="flex-1 p-8 bg-gray-100 flex items-center flex-col justify-center">
