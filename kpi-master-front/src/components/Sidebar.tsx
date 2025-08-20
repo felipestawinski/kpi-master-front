@@ -37,6 +37,12 @@ export default function Sidebar() {
           >
             Gerenciar usuários
           </button>
+          <button
+            onClick={() => handleNavigation('/permissions')}
+            className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
+          >
+            Estatísticas
+          </button>
         </div>
 
         <div className="w-64 bg-amber-500 text-white flex p-4 flex-col space-y-4 pb-8">

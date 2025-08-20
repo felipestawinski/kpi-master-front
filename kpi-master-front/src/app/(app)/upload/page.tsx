@@ -135,10 +135,10 @@ export default function UploadPage() {
             {!file ? (
               <>
                 <p className="text-sm font-medium">
-                  Drag and drop your file here, or{' '}
-                  <span className="text-blue-600 underline underline-offset-4">browse</span>
+                  Arraste e solte seu arquivo aqui, ou{' '}
+                  <span className="text-blue-600 underline underline-offset-4">busque</span>
                 </p>
-                <p className="mt-1 text-xs text-gray-500">No file type restrictions</p>
+                <p className="mt-1 text-xs text-gray-500">Sem restrições de tipo de arquivo</p>
               </>
             ) : (
               <div className="w-full max-w-md text-left">

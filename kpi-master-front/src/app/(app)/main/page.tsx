@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiOutlineCloudUpload } from "react-icons/ai";
 import { HiMagnifyingGlass } from "react-icons/hi2";
-import { CgFileDocument } from "react-icons/cg";
-import { FcStatistics } from "react-icons/fc";
+import { MdLeaderboard } from "react-icons/md";
 
 export default function MainPage() {
   const router = useRouter();
@@ -45,19 +44,19 @@ export default function MainPage() {
   };
 
   return (
-    <div className="flex min-h-screen p-11">
+    <div className="flex min-h-screen p-11 bg-[url('/background3.png')] bg-cover bg-center bg-no-repeat">
 
       {/* Welcome message */}
-      <div className="flex-1 bg-gray-100 flex flex-col ">
-        <div className='flex-initial'>
-          <h1 className="text-4xl font-semibold text-gray-600 ">Hello,</h1>
-          <h1 className="text-5xl font-semibold text-amber-500">{username}</h1>
-          <p className="text-3xl mt-4 text-gray-700">Welcome to your dashboard.</p>
+      <div className="flex-1 flex flex-col ">
+        <div className='flex-initial space-y-5'>
+          <h1 className="text-4xl font-semibold text-gray-900 ">Olá,</h1>
+          <h1 className="text-5xl font-semibold text-gray-900">{username}</h1>
+          <p className="text-3xl mt-4 text-gray-900">Bem vindo ao seu painel.</p>
         </div>
 
         {/* Introduction */}
         <div className='flex-1 flex items-center flex-col justify-center space-y-4'>
-        <p className="text-gray-600">Aqui você pode...</p>
+        <p className="text-gray-800">Aqui você pode...</p>
           <div className='flex flex-row space-x-10'>  
               <div className='flex flex-col'>
                 <button className='bg-amber-500 p-8 hover:bg-amber-700 rounded text-gray-800 flex justify-center items-center flex-col'>
@@ -75,7 +74,7 @@ export default function MainPage() {
               <div className='flex flex-col'>
                 <button className='bg-amber-500 p-8 hover:bg-amber-700 rounded text-gray-800 flex justify-center items-center flex-col'>
                   Gerar estatísticas
-                  <FcStatistics size={30} color='black' />
+                 <MdLeaderboard size={30} color='black' />
                 </button>
               </div>
             
