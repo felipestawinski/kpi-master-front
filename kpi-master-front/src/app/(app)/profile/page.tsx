@@ -65,7 +65,6 @@ export default function ProfilePage() {
     setPreviewUrl(f ? URL.createObjectURL(f) : null);
   };
 
-  // Upload to your backend (adjust endpoint if needed)
   const uploadPicture = async () => {
     if (!file) {
       alert('Please choose an image first.');
