@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { CgProfile } from "react-icons/cg";
 
 export default function Sidebar() {
   const router = useRouter();
@@ -10,8 +11,8 @@ export default function Sidebar() {
   };
 
   return (
-    <div className=" w-64 bg-amber-500 text-white flex flex-col justify-between pt-8">
-        <div className="w-64 bg-amber-500 text-white flex p-4 flex-col space-y-4">
+    <div className=" w-64 bg-amber-500 text-white flex flex-col justify-between pt-8 border-r-4 border-amber-600">
+        <div className="w-64 text-white flex p-4 flex-col space-y-4">
 
           <button
             onClick={() => handleNavigation('/main')}
@@ -45,7 +46,7 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <div className="w-64 bg-amber-500 text-white flex p-4 flex-col space-y-4 pb-8">
+        <div className="w-64 text-white flex p-4 flex-col space-y-4 pb-8">
           <button
             onClick={() => {
               localStorage.removeItem('token');
@@ -58,9 +59,10 @@ export default function Sidebar() {
 
           <button
               onClick={() => handleNavigation('/profile')}
-              className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
+              className="bg-gray-700 hover:bg-gray-600 p-3 rounded flex items-center justify-center space-x-1"
             >
-              Perfil
+            <CgProfile size={20} color='white' className='inline '/>
+            <p>Perfil</p>
           </button> 
         </div>
      </div>

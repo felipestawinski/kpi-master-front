@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { AiOutlineCloudUpload } from "react-icons/ai";
 import { HiMagnifyingGlass } from "react-icons/hi2";
 import { MdLeaderboard } from "react-icons/md";
+import { MdOutlineManageSearch } from "react-icons/md";
 
 export default function MainPage() {
   const router = useRouter();
   const [username, setUsername] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -17,6 +19,7 @@ export default function MainPage() {
       router.push('/login');
       return;
     }
+
  
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -39,45 +42,78 @@ export default function MainPage() {
 
   }, [router]);
 
+  useEffect(() => {
+    const backgroundTimer = setTimeout(() => {
+      setBackgroundVisible(true);
+    }, 150);
+    // Trigger animation after component mounts
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 100);
+
+    
+    return () => {
+      clearTimeout(backgroundTimer);
+      clearTimeout(timer);
+    };
+  }, []);
+
   const handleNavigation = (route: string) => {
     router.push(route);
   };
 
+  const [backgroundVisible, setBackgroundVisible] = useState(false);
+
   return (
-    <div className="flex min-h-screen p-11 bg-[url('/background3.png')] bg-cover bg-center bg-no-repeat">
+    <div className={`flex min-h-screen p-11 bg-[url('/background3.png')] bg-cover bg-left bg-no-repeat transition-all duration-1000 ease-out transform ${
+      backgroundVisible ? 'opacity-100' : 'opacity-0'
+    }`}>
 
       {/* Welcome message */}
-      <div className="flex-1 flex flex-col ">
-        <div className='flex-initial space-y-5'>
-          <h1 className="text-4xl font-semibold text-gray-900 ">Olá,</h1>
+      <div className="flex-1 flex flex-col">
+        <div className={`flex-initial space-y-5 transition-all duration-1000 ease-out ${
+          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}>
+          <h1 className="text-4xl font-semibold text-gray-900">Olá,</h1>
           <h1 className="text-5xl font-semibold text-gray-900">{username}</h1>
           <p className="text-3xl mt-4 text-gray-900">Bem vindo ao seu painel.</p>
         </div>
 
         {/* Introduction */}
         <div className='flex-1 flex items-center flex-col justify-center space-y-4'>
-        <p className="text-gray-800">Aqui você pode...</p>
+          <p className={`text-gray-800 transition-all duration-1000 delay-300 ease-out ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
+            Aqui você pode...
+          </p>
+          
           <div className='flex flex-row space-x-10'>  
-              <div className='flex flex-col'>
-                <button className='bg-amber-500 p-8 hover:bg-amber-700 rounded text-gray-800 flex justify-center items-center flex-col'>
-                  Pesquisar documentos
-                  <HiMagnifyingGlass size={30} color='black'/>
-                </button>
-  
-              </div>
-              <div className='flex flex-col'>
-                <button className='bg-amber-500 p-8 hover:bg-amber-700 rounded text-gray-800 flex justify-center items-center flex-col'>
-                  Carregar documentos
-                  <AiOutlineCloudUpload size={30} color='black'/>
-                </button>
-              </div>
-              <div className='flex flex-col'>
-                <button className='bg-amber-500 p-8 hover:bg-amber-700 rounded text-gray-800 flex justify-center items-center flex-col'>
-                  Gerar estatísticas
-                 <MdLeaderboard size={30} color='black' />
-                </button>
-              </div>
+            <div className='flex flex-col flex-1'>
+              <button className={` p-8 rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all duration-1000 delay-500 ease-out transform  ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+              }`}>
+                Pesquisar documentos
+                <MdOutlineManageSearch size={50} color='black'/>
+              </button>
+            </div>
             
+            <div className='flex flex-col flex-1'>
+              <button className={`  p-8 rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all duration-1000 delay-700 ease-out transform  ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+              }`}>
+                Carregar documentos
+                <AiOutlineCloudUpload size={50} color='black'/>
+              </button>
+            </div>
+            
+            <div className='flex flex-col flex-1'>
+              <button className={`  p-8  rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all duration-1000 delay-900 ease-out transform  ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+              }`}>
+                Gerar estatísticas
+                <MdLeaderboard size={50} color='black' />
+              </button>
+            </div>
           </div>
         </div>
       </div>
