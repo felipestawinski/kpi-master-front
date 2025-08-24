@@ -65,7 +65,7 @@ export default function MainPage() {
   const [backgroundVisible, setBackgroundVisible] = useState(false);
 
   return (
-    <div className={`flex min-h-screen p-11 bg-[url('/background3.png')] bg-cover bg-left bg-no-repeat transition-all duration-1000 ease-out transform ${
+    <div className={`flex min-h-screen p-11 bg-cover bg-left bg-no-repeat transition-all duration-1000 ease-out transform ${
       backgroundVisible ? 'opacity-100' : 'opacity-0'
     }`}>
 

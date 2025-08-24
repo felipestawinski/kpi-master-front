@@ -11,7 +11,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className=" w-64 bg-amber-500 text-white flex flex-col justify-between pt-8 border-r-4 border-amber-600">
+    <div className=" w-64  bg-amber-500 text-white flex flex-col justify-between pt-8 ">
         <div className="w-64 text-white flex p-4 flex-col space-y-4">
 
           <button

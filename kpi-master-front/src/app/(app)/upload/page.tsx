@@ -88,7 +88,7 @@ export default function UploadPage() {
   const previewUrl = file ? URL.createObjectURL(file) : null;
 
   return (
-    <div className="p-6 bg-gray-50">
+    <div className="p-6">
       <div className="mx-auto max-w-2xl">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">Upload a File</h1>
