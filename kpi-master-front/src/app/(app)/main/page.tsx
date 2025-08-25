@@ -87,8 +87,8 @@ export default function MainPage() {
             Aqui você pode...
           </p>
           
-          <div className='flex flex-row space-x-10'>  
-            <div className='flex flex-col flex-1'>
+          <div className='flex flex-row space-x-10  '>  
+            <div className='flex flex-col flex-1 backdrop-blur-sm rounded-lg bg-white/25 hover:bg-white/40 cursor-pointer' onClick={() => handleNavigation('/search')} >
               <button className={` p-8 rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all duration-1000 delay-500 ease-out transform  ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
               }`}>
@@ -97,8 +97,9 @@ export default function MainPage() {
               </button>
             </div>
             
-            <div className='flex flex-col flex-1'>
-              <button className={`  p-8 rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all duration-1000 delay-700 ease-out transform  ${
+            <div className='flex flex-col flex-1 backdrop-blur-sm rounded-lg bg-white/25 hover:bg-white/40 cursor-pointer' onClick={() => handleNavigation('/upload')}>
+              <button className={`  p-8 rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all 
+              duration-1000 delay-700 ease-out transform  ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
               }`}>
                 Carregar documentos
@@ -106,7 +107,7 @@ export default function MainPage() {
               </button>
             </div>
             
-            <div className='flex flex-col flex-1'>
+            <div className='flex flex-col flex-1 backdrop-blur-sm rounded-lg bg-white/25 hover:bg-white/40 cursor-pointer' onClick={() => handleNavigation('/statistics')}>
               <button className={`  p-8  rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all duration-1000 delay-900 ease-out transform  ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
               }`}>

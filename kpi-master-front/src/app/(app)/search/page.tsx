@@ -108,7 +108,7 @@ export default function SearchPage() {
           </button>
         </div>
 
-        {loading && <div className="rounded-lg bg-white p-6 shadow">Loading files…</div>}
+        {loading && <div className="rounded-lg p-6 shadow">Loading files…</div>}
 
         {!loading && error && (
           <div className="rounded-lg bg-red-50 p-4 text-red-700 ring-1 ring-red-200">
@@ -117,27 +117,28 @@ export default function SearchPage() {
         )}
 
         {!loading && !error && files.length === 0 && (
-          <div className="rounded-lg bg-white p-6 text-gray-600 shadow">
+          <div className="rounded-lg p-6 text-gray-600 shadow">
             No files found for this user.
           </div>
         )}
 
         {!loading && !error && files.length > 0 && (
-          <div className="overflow-hidden rounded-lg bg-white shadow ring-1 ring-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="overflow-hidden rounded-lg shadow ring-1 ring-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 backdrop-blur-sm rounded-lg bg-white/25">
+              <thead className="backdrop-blur-sm rounded-lg bg-black/20">
                 <tr>
                   <Th>Filename</Th>
                   <Th>Institution</Th>
                   <Th>Writer</Th>
                   <Th>Date</Th>
                   <Th>Action</Th>
+                  <Th>Analysis</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-gray-100 backdrop-blur-sm rounded-lg bg-white/25">
                 {files.map((f) => (
                   console.log(typeof(f)),       
-                  <tr key={f.id} className="hover:bg-gray-50">
+                  <tr key={f.id} className="hover:bg-white/40">
                     <Td className="font-medium text-gray-900">{f.filename}</Td>
                     <Td>{f.institution}</Td>
                     <Td>{f.writer}</Td>
@@ -156,6 +157,15 @@ export default function SearchPage() {
                         <span className="text-gray-400">—</span>
                       )}
                     </Td>
+                    <Td> 
+                    <button
+                        onClick={() => console.log("test")}
+                        className="bg-amber-500 hover:bg-gray-600 p-3 rounded"
+                      >
+                        Gerar análise
+                      </button>
+                    </Td>
+
                   </tr>
                 ))}
               </tbody>

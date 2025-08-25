@@ -14,6 +14,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('AuthGuard check, token:', token);
     
     if (!token) {
       router.push('/login'); // Redirect to login page
