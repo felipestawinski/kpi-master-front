@@ -91,9 +91,9 @@ export default function UploadPage() {
     <div className="p-6">
       <div className="mx-auto max-w-2xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-semibold tracking-tight">Upload a File</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Envie um arquivo</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Choose any file type, give it a name, and upload it securely.
+            Escolha um xlxs, dê um nome, e envie para IPFS de maneira segura.
           </p>
         </div>
 
@@ -107,7 +107,7 @@ export default function UploadPage() {
             className={[
               'relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition',
               isDragging ? 'border-blue-500/70 bg-blue-50' : 'border-gray-300 hover:border-gray-400',
-              'bg-white shadow-sm',
+              'bg-white/30 backdrop-blur-sm shadow-sm',
             ].join(' ')}
             role="button"
             tabIndex={0}
@@ -134,7 +134,7 @@ export default function UploadPage() {
 
             {!file ? (
               <>
-                <p className="text-sm font-medium">
+                <p className="text-sm font-medium text-gray-900">
                   Arraste e solte seu arquivo aqui, ou{' '}
                   <span className="text-blue-600 underline underline-offset-4">busque</span>
                 </p>
