@@ -38,6 +38,17 @@ export default function SearchPage() {
     }
   }, []);
 
+  const generateAnalysis = async (fileId: number) =>  {
+    const res = await fetch('http://localhost:8080/analysis-gen', {
+      method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `${token}` } : {}),
+          },
+          body: fileId.toString(),
+        });
+  }
+
   const fetchFiles = async () => {
     if (!username) {
       setError('No username found. Please log in again.');
@@ -159,7 +170,7 @@ export default function SearchPage() {
                     </Td>
                     <Td> 
                     <button
-                        onClick={() => console.log("test")}
+                        onClick={() => generateAnalysis(f.id)}
                         className="bg-amber-500 hover:bg-gray-600 p-3 rounded"
                       >
                         Gerar análise
@@ -176,6 +187,7 @@ export default function SearchPage() {
     </div>
   );
 }
+
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
