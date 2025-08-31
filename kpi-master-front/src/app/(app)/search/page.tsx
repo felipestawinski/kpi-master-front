@@ -47,6 +47,8 @@ export default function SearchPage() {
           },
           body: fileId.toString(),
         });
+
+    console.log(res)
   }
 
   const fetchFiles = async () => {
