@@ -45,7 +45,9 @@ export default function SearchPage() {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `${token}` } : {}),
           },
-          body: fileId.toString(),
+          body: JSON.stringify({
+            fileId: fileId,
+          })
         });
 
     console.log(res)
@@ -173,7 +175,7 @@ export default function SearchPage() {
                     <Td> 
                     <button
                         onClick={() => generateAnalysis(f.id)}
-                        className="bg-amber-500 hover:bg-gray-600 p-3 rounded"
+                        className="bg-amber-500 hover:bg-amber-600 p-3 rounded"
                       >
                         Gerar análise
                       </button>
