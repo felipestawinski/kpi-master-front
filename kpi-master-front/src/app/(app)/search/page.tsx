@@ -50,7 +50,8 @@ export default function SearchPage() {
           })
         });
 
-    console.log(res)
+    const text = await res.text();
+    console.log("Analysis response:", text);
   }
 
   const fetchFiles = async () => {
