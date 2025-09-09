@@ -2,6 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { CgProfile } from "react-icons/cg";
+import { FaHome } from "react-icons/fa";
+import { MdOutlineManageSearch } from "react-icons/md";
+import { IoDocumentSharp } from "react-icons/io5";
+import { PiUsersFill } from "react-icons/pi";
+import { MdLeaderboard } from "react-icons/md";
+import { MdLogout } from "react-icons/md";
 
 export default function Sidebar() {
   const router = useRouter();
@@ -11,37 +17,42 @@ export default function Sidebar() {
   };
 
   return (
-    <div className=" w-64  bg-amber-500 text-white flex flex-col justify-between pt-8 ">
+    <div className=" w-64 text-white flex flex-col justify-between pt-8 text-sm z-10 backdrop-blur-lg">
         <div className="w-64 text-white flex p-4 flex-col space-y-4">
 
           <button
             onClick={() => handleNavigation('/main')}
-            className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
           >
-            Página Inicial
+            <FaHome size={20} color='white' className='inline '/>
+            <p>Página Inicial</p>
           </button>
           <button
             onClick={() => handleNavigation('/search')}
-            className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
           >
-            Pesquisar documentos
+            <MdOutlineManageSearch size={23} color='white' className='inline '/>
+            Pesquisar
           </button>
           <button
             onClick={() => handleNavigation('/upload')}
-            className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
           >
+            <IoDocumentSharp size={19} color='white' className='inline '/>
             Enviar documentos
           </button>
           <button
             onClick={() => handleNavigation('/permissions')}
-            className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
           >
+            <PiUsersFill size={20} color='white' className='inline '/>
             Gerenciar usuários
           </button>
           <button
             onClick={() => handleNavigation('/permissions')}
-            className="bg-gray-700 hover:bg-gray-600 p-3 rounded"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
           >
+            <MdLeaderboard size={20} color='white' className='inline '/>
             Estatísticas
           </button>
         </div>
@@ -52,14 +63,15 @@ export default function Sidebar() {
               localStorage.removeItem('token');
               router.push('/login');
             }}
-            className="mt-auto bg-amber-700 hover:bg-red-700 p-3 rounded text-white"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 text-red"
             >
+              <MdLogout size={20} color='white' className='inline '/>
               Logout
           </button>
 
           <button
               onClick={() => handleNavigation('/profile')}
-              className="bg-gray-700 hover:bg-gray-600 p-3 rounded flex items-center justify-center space-x-1"
+              className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1"
             >
             <CgProfile size={20} color='white' className='inline '/>
             <p>Perfil</p>

@@ -106,25 +106,19 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 ">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Your Files</h1>
-            <p className="text-sm text-gray-600">
-              Showing uploads for{' '}
-              <span className="font-medium">{username ?? '-'}</span>
+            <h1 className="text-2xl font-semibold">Seus arquivos</h1>
+            <p className="text-sm text-white">
+              Mostrando uploads para{' '}
+              <span className="font-bold ">{username ?? '-'}</span>
             </p>
           </div>
-          <button
-            onClick={fetchFiles}
-            className="rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-gray-300 hover:bg-gray-50"
-          >
-            Refresh
-          </button>
         </div>
 
-        {loading && <div className="rounded-lg p-6 shadow">Loading files…</div>}
+        {loading && <div className="rounded-lg p-6 shadow">Carregando arquivos…</div>}
 
         {!loading && error && (
           <div className="rounded-lg bg-red-50 p-4 text-red-700 ring-1 ring-red-200">
@@ -139,22 +133,22 @@ export default function SearchPage() {
         )}
 
         {!loading && !error && files.length > 0 && (
-          <div className="overflow-hidden rounded-lg shadow ring-1 ring-gray-200">
-            <table className="min-w-full divide-y divide-gray-200 backdrop-blur-sm rounded-lg bg-white/25">
+          <div className="overflow-hidden rounded-lg shadow ring-1">
+            <table className="min-w-full divide-y backdrop-blur-sm rounded-lg bg-white/25">
               <thead className="backdrop-blur-sm rounded-lg bg-black/20">
                 <tr>
-                  <Th>Filename</Th>
-                  <Th>Institution</Th>
-                  <Th>Writer</Th>
-                  <Th>Date</Th>
-                  <Th>Action</Th>
-                  <Th>Analysis</Th>
+                  <Th>Nome</Th>
+                  <Th>Instituição</Th>
+                  <Th>Autor</Th>
+                  <Th>Data</Th>
+                  <Th>Arquivo</Th>
+                  <Th>Análise</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 backdrop-blur-sm rounded-lg bg-white/25">
+              <tbody className="divide-y backdrop-blur-sm rounded-lg">
                 {files.map((f) => (
                   console.log(typeof(f)),       
-                  <tr key={f.id} className="hover:bg-white/40">
+                  <tr key={f.id} className="hover:bg-white/20">
                     <Td className="font-medium text-gray-900">{f.filename}</Td>
                     <Td>{f.institution}</Td>
                     <Td>{f.writer}</Td>
@@ -165,9 +159,9 @@ export default function SearchPage() {
                           href={f.fileAddress}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-blue-600 hover:underline"
+                          className="text-amber-500 hover:underline"
                         >
-                          Open
+                          Abrir
                         </a>
                       ) : (
                         <span className="text-gray-400">—</span>

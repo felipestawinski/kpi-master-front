@@ -93,7 +93,7 @@ export default function UploadPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">Envie um arquivo</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Escolha um xlxs, dê um nome, e envie para IPFS de maneira segura.
+            Escolha um KPI, dê um nome, e envie para uma rede IPFS de maneira segura.
           </p>
         </div>
 
@@ -136,7 +136,7 @@ export default function UploadPage() {
               <>
                 <p className="text-sm font-medium text-gray-900">
                   Arraste e solte seu arquivo aqui, ou{' '}
-                  <span className="text-blue-600 underline underline-offset-4">busque</span>
+                  <span className="text-amber-700 underline underline-offset-4">busque</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-500">Sem restrições de tipo de arquivo</p>
               </>
@@ -162,16 +162,16 @@ export default function UploadPage() {
                     <button
                       type="button"
                       onClick={onChooseClick}
-                      className="rounded-md bg-white px-3 py-1.5 text-sm ring-1 ring-gray-300 hover:bg-gray-50"
+                      className="rounded-md bg-amber-500 px-3 py-1.5 text-sm ring-1 ring-amber-500 hover:bg-amber-600"
                     >
-                      Change
+                      Mudar
                     </button>
                     <button
                       type="button"
                       onClick={clearFile}
-                      className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 ring-1 ring-gray-300 hover:bg-gray-200"
+                      className="rounded-md bg-gray-100 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-200"
                     >
-                      Remove
+                      Remover
                     </button>
                   </div>
                 </div>
@@ -189,17 +189,15 @@ export default function UploadPage() {
 
           {/* Filename */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Filename</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Nome do arquivo</label>
             <input
               type="text"
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
-              placeholder="Enter filename (without extension, if you want)"
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none ring-blue-500 focus:ring-2"
+              placeholder="Digite um nome para seu arquivo"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm outline-none ring-amber-500 focus:ring-2"
             />
-            <p className="mt-1 text-xs text-gray-500">
-              You can rename before uploading. If you leave the extension out, the server can add it.
-            </p>
+          
           </div>
 
           {/* Actions */}
@@ -214,18 +212,9 @@ export default function UploadPage() {
                   : 'bg-blue-600 hover:bg-blue-500',
               ].join(' ')}
             >
-              {isUploading ? 'Uploading…' : 'Upload'}
+              {isUploading ? 'Enviando' : 'Enviar'}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFile(null);
-                setFilename('');
-              }}
-              className="rounded-lg bg-white px-4 py-2 text-sm font-medium ring-1 ring-gray-300 hover:bg-gray-50"
-            >
-              Reset
-            </button>
+            
           </div>
         </form>
       </div>

@@ -85,7 +85,7 @@ export default function LoginPage() {
             className="w-full py-2 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isRedirecting}
           >
-            {isRedirecting ? 'Logging in...' : 'Login'}
+            {isRedirecting ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
         <button
@@ -93,7 +93,7 @@ export default function LoginPage() {
           className="w-full mt-3 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={isRedirecting}
         >
-          Don't have an account? Register
+          Não possui uma conta? Registre-se
         </button>
       </div>
 

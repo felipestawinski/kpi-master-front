@@ -3,6 +3,19 @@
 import Sidebar from '@/components/Sidebar';
 import { useCallback, useEffect, useRef } from 'react';
 import Script from 'next/script';
+import { Inter, Roboto, Poppins } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
+
+const roboto = Roboto({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '700']
+})
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700']
+})
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const inited = useRef(false);
@@ -50,35 +63,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [initFinisher]);
 
   return (
-    <div className="min-h-screen flex font-mono">
+    <div 
+      ref={containerRef}
+      className="min-h-screen flex finisher-header relative"
+    >
       <Script
         src="/vendor/finisher-header.es5.min.js"
         strategy="afterInteractive"
         onLoad={initFinisher}
       />
 
-      <Sidebar /> 
+      {/* Global styles for the animated background */}
+      <style jsx global>{`
+        .finisher-header canvas {
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          z-index: 1 !important;
+          pointer-events: none !important;
+        }
+      `}</style>
 
-      <main
-        ref={containerRef}
-        className="relative finisher-header flex-1"
-      >
-        {/* Keep the canvas behind your content */}
-        <style jsx global>{`
-          .finisher-header canvas {
-            position: absolute !important;
-            inset: 0;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 0 !important;
-            pointer-events: none;
-          }
-        `}</style>
+      <Sidebar />
+      
 
-        {/* Content layer */}
-        <div className="relative z-10 min-h-screen">
-          {children}
-        </div>
+      {/* Main content area */}
+      <main className="relative z-10 flex-1">
+        {children}
       </main>
     </div>
   );
