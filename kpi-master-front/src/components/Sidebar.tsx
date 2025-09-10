@@ -19,41 +19,44 @@ export default function Sidebar() {
   return (
     <div className=" w-64 text-white flex flex-col justify-between pt-8 text-sm z-10 backdrop-blur-lg">
         <div className="w-64 text-white flex p-4 flex-col space-y-4">
-
           <button
             onClick={() => handleNavigation('/main')}
-            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
           >
-            <FaHome size={20} color='white' className='inline '/>
-            <p>Página Inicial</p>
+            <FaHome size={20} color='white' />
+            <span>Página Inicial</span>
           </button>
+          
           <button
             onClick={() => handleNavigation('/search')}
-            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
           >
-            <MdOutlineManageSearch size={23} color='white' className='inline '/>
-            Pesquisar
+            <MdOutlineManageSearch size={20} color='white' />
+            <span>Pesquisar</span>
           </button>
+          
           <button
             onClick={() => handleNavigation('/upload')}
-            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
           >
-            <IoDocumentSharp size={19} color='white' className='inline '/>
-            Enviar documentos
+            <IoDocumentSharp size={20} color='white' />
+            <span>Enviar documentos</span>
           </button>
+          
           <button
             onClick={() => handleNavigation('/permissions')}
-            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
           >
-            <PiUsersFill size={20} color='white' className='inline '/>
-            Gerenciar usuários
+            <PiUsersFill size={20} color='white' />
+            <span>Gerenciar usuários</span>
           </button>
+          
           <button
             onClick={() => handleNavigation('/permissions')}
-            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 h-12"
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
           >
-            <MdLeaderboard size={20} color='white' className='inline '/>
-            Estatísticas
+            <MdLeaderboard size={20} color='white' />
+            <span>Estatísticas</span>
           </button>
         </div>
 
@@ -63,15 +66,15 @@ export default function Sidebar() {
               localStorage.removeItem('token');
               router.push('/login');
             }}
-            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1 text-red"
-            >
-              <MdLogout size={20} color='white' className='inline '/>
-              Logout
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 text-red"
+          >
+            <MdLogout size={20} color='white' />
+            <span>Logout</span>
           </button>
 
           <button
               onClick={() => handleNavigation('/profile')}
-              className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-1"
+              className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2"
             >
             <CgProfile size={20} color='white' className='inline '/>
             <p>Perfil</p>
