@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const defaultProfileUrl = 'https://static.vecteezy.com/system/resources/previews/024/183/525/non_2x/avatar-of-a-man-portrait-of-a-young-guy-illustration-of-male-character-in-modern-color-style-vector.jpg';
 
   // Image upload state
   const [file, setFile] = useState<File | null>(null);
@@ -112,7 +113,7 @@ export default function ProfilePage() {
       localStorage.setItem('profileImageUrl', finalUrlFromServer);
       alert('Profile picture uploaded!');
       // Optional: if backend gives you a definitive URL, you might want to force-refresh:
-      // router.refresh();
+      router.refresh();
     } catch (err: any) {
       alert('Upload error: ' + err.message);
     }
@@ -120,15 +121,15 @@ export default function ProfilePage() {
 
   if (loading) return <div className="p-10">Loading profile…</div>;
   if (!user) return <div className="p-10">No user info found.</div>;
-  const picture = localStorage.getItem('profileImageUrl') || '';
+  const picture = localStorage.getItem('profileImageUrl') || defaultProfileUrl;
 
   return (
-    <div className="p-8 bg-gray-100">
-      <div className="max-w-3xl mx-auto bg-white p-6 shadow rounded">
+    <div className="p-8">
+      <div className="max-w-3xl mx-auto bg-white/30 backdrop-blur-sm p-6 shadow rounded">
         <div className="flex items-center gap-6">
           <img
             src={picture}
-            alt="Profile"
+            alt="Perfil"
             className="w-24 h-24 rounded-full object-cover border"
           />
           <div>
@@ -137,14 +138,14 @@ export default function ProfilePage() {
               onClick={uploadPicture}
               className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600"
             >
-              Upload new picture
+              Enviar nova foto
             </button>
           </div>
         </div>
 
         <hr className="my-6" />
 
-        <h1 className="text-2xl font-semibold mb-4">Your Info</h1>
+        <h1 className="text-2xl font-semibold mb-4">Informações</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-900">
           <Info label="Email" value={user.email || '-'} />
           <Info label="Username" value={user.username || '-'} />
