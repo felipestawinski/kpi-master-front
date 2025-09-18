@@ -20,6 +20,7 @@ export default function SearchPage() {
   // ✅ defer reading localStorage until after mount
   const [username, setUsername] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [analysisImage, setAnalysisImage] = useState<string | null>(null);
 
   useEffect(() => {
     // runs only on client after hydration
@@ -50,7 +51,14 @@ export default function SearchPage() {
           })
         });
 
+
     const text = await res.text();
+    const payload = JSON.parse(text);
+
+    if (payload?.hasImage && payload.image) {
+      setAnalysisImage(payload.image);
+    }
+
     console.log("Analysis response:", text);
   }
 
@@ -182,6 +190,25 @@ export default function SearchPage() {
             </table>
           </div>
         )}
+
+        {analysisImage && (
+      <div className="rounded-lg shadow ring-1 bg-white/25 backdrop-blur-sm p-6">
+        <h2 className="text-xl font-semibold mb-4 text-white">Análise Gerada</h2>
+        <div className="flex justify-center">
+          <img 
+            src={`${analysisImage}`}
+            alt="Analysis Chart" 
+            className="max-w-full h-auto rounded-lg shadow-md"
+          />
+        </div>
+        <button
+          onClick={() => setAnalysisImage(null)}
+          className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+        >
+          Fechar Análise
+        </button>
+      </div>
+    )}
       </div>
     </div>
   );
