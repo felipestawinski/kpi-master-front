@@ -35,7 +35,6 @@ function UsersPage() {
 
   useEffect(()=> {
     setToken(localStorage.getItem('token'));
-    fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
