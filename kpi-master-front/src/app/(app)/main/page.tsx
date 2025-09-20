@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiOutlineCloudUpload } from "react-icons/ai";
-import { HiMagnifyingGlass } from "react-icons/hi2";
 import { MdLeaderboard } from "react-icons/md";
 import { MdOutlineManageSearch } from "react-icons/md";
 

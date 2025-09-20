@@ -1,8 +1,9 @@
 'use client';
 
+import AuthGuard from '@/components/AuthGuard';
 import { useRef, useState } from 'react';
 
-export default function UploadPage() {
+export function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [filename, setFilename] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -219,5 +220,13 @@ export default function UploadPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ProtectedUploadPage() {
+  return (
+    <AuthGuard>
+      <UploadPage />
+    </AuthGuard>
   );
 }

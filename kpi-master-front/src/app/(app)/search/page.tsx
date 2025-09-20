@@ -1,5 +1,6 @@
 'use client';
 
+import AuthGuard from '@/components/AuthGuard';
 import { useEffect, useState } from 'react';
 
 type ApiFile = {
@@ -12,7 +13,7 @@ type ApiFile = {
 };
 
 
-export default function SearchPage() {
+export function SearchPage() {
   const [files, setFiles] = useState<ApiFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +102,6 @@ export default function SearchPage() {
     if (username !== null) {
       fetchFiles();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 
   const formatDate = (s?: string) => {
@@ -201,12 +201,23 @@ export default function SearchPage() {
             className="max-w-full h-auto rounded-lg shadow-md"
           />
         </div>
+
+        <div className="flex justify-center space-x-4">
+
         <button
           onClick={() => setAnalysisImage(null)}
           className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
         >
           Fechar Análise
         </button>
+
+        <button
+          onClick={() => saveImage(analysisImage)}
+          className="mt-4 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded"
+        >
+          Salvar Análise
+        </button>
+        </div>
       </div>
     )}
       </div>
@@ -224,4 +235,23 @@ function Th({ children }: { children: React.ReactNode }) {
 }
 function Td({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <td className={`whitespace-nowrap px-4 py-3 text-sm text-gray-700 ${className}`}>{children}</td>;
+}
+
+export default function ProtectedSearchPage() {
+  return (
+    <AuthGuard>
+      <SearchPage />
+    </AuthGuard>
+  );
+}
+
+export function saveImage(image: string | null) {
+  if (!image) return;
+
+  const link = document.createElement('a');
+  link.href = image;
+  link.download = 'analysis.png';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

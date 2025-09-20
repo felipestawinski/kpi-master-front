@@ -44,7 +44,7 @@ export default function Sidebar() {
           </button>
           
           <button
-            onClick={() => handleNavigation('/permissions')}
+            onClick={() => handleNavigation('/users')}
             className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
           >
             <PiUsersFill size={20} color='white' />

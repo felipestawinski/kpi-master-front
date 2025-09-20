@@ -22,6 +22,23 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       return;
     }
 
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const now = Math.floor(Date.now() / 1000); // current time in seconds
+      console.log(payload)
+      if (payload.exp < now) {
+        localStorage.removeItem('token'); // clear expired token
+        alert('Session has expired. Please log in again.');
+        router.push('/login');
+        return;
+      }
+
+      } catch (error) {
+      console.error('Invalid token');
+      localStorage.removeItem('token');
+      router.push('/login');
+    }
+
     // Optional: Validate token with your backend
     // You can add token validation logic here
     setIsAuthenticated(true);

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthGuard from '@/components/AuthGuard';
 
 type UserInfo = {
   email: string;
@@ -12,7 +13,7 @@ type UserInfo = {
   profileImageUrl?: string; // stored URL if you have one
 };
 
-export default function ProfilePage() {
+export function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,5 +165,13 @@ function Info({ label, value }: { label: string; value: string }) {
       <div className="text-xs text-gray-500">{label}</div>
       <div className="text-sm font-medium">{value}</div>
     </div>
+  );
+}
+
+export default function ProtectedProfilePage() {
+  return (
+    <AuthGuard>
+      <ProfilePage />
+    </AuthGuard>
   );
 }
