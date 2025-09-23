@@ -3,20 +3,12 @@
 import { useState, useEffect } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 
-// type ApiFile = {
-//   id: number;
-//   filename: string;
-//   institution: string;
-//   writer: string;
-//   date: string;
-//   fileAddress: string;
-// };
 
 type ApiUser = {
-  ID: number;
-  Email: string;
-  Username: string;
-  Institution: string;
+  id: number;
+  email: string;
+  username: string;
+  institution: string;
 }
 
 

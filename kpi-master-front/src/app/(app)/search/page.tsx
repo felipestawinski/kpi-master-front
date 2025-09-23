@@ -113,6 +113,27 @@ export function SearchPage() {
     return isNaN(dt.getTime()) ? s : dt.toLocaleString();
   };
 
+
+  const saveOnStatistics = async (image:string | null) => {
+
+  if (!image) return;
+
+  const res = await fetch('http://localhost:8080/statistics-gen', {
+      method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `${token}` } : {}),
+          },
+          body: JSON.stringify({
+            "image": image,
+          })
+        });
+
+
+    const text = await res.text();
+    const payload = JSON.parse(text);
+}
+
   return (
     <div className="p-6 ">
       <div className="mx-auto max-w-5xl">
@@ -215,7 +236,14 @@ export function SearchPage() {
           onClick={() => saveImage(analysisImage)}
           className="mt-4 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded"
         >
-          Salvar Análise
+          Fazer Download
+        </button>
+
+        <button
+          onClick={() => saveOnStatistics(analysisImage)}
+          className="mt-4 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded"
+        >
+          Salvar em "Estatísticas"
         </button>
         </div>
       </div>
