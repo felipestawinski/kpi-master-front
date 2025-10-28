@@ -3,7 +3,7 @@ import About from '../../../components/About';
 
 export default function LobbyPage() {
   return (
-    <main className="min-h-screen m-0 p-0">
+    <main className="min-h-screen">
       <Header />
       <About />
     </main>

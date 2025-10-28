@@ -3,7 +3,7 @@ import Silk from './Silk';
 
 export default function Header () {
     return (
-        <header className="!h-[40vh] flex flex-col items-center justify-center bg-gray-800 text-white relative overflow-hidden">
+        <header className="h-[40vh] flex flex-col items-center justify-center bg-gray-800 text-white relative overflow-hidden">
             <div className='absolute inset-0 z-0'>
                 <Silk
                 speed={5}

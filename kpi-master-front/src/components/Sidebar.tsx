@@ -58,6 +58,14 @@ export default function Sidebar() {
             <MdLeaderboard size={20} color='white' />
             <span>Estatísticas</span>
           </button>
+
+          <button
+            onClick={() => handleNavigation('/chat')}
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
+          >
+            <MdLeaderboard size={20} color='white' />
+            <span>Chat</span>
+          </button>
         </div>
 
         <div className="w-64 text-white flex p-4 flex-col space-y-4 pb-8">
