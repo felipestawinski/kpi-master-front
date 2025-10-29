@@ -99,14 +99,13 @@ export function ChatPage() {
         }),
       });
 
-
       const response = await res.text();
       const payload = JSON.parse(response);
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: payload.message || response,
+        content: payload.text_response || response,
         timestamp: new Date(),
       };
 
