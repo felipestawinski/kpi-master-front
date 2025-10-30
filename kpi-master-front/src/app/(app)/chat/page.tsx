@@ -1,7 +1,7 @@
 'use client';
 
 import AuthGuard from '@/components/AuthGuard';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 type ApiFile = {
   id: number;
@@ -27,6 +27,15 @@ export function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
 
   useEffect(() => {
     try {
@@ -83,10 +92,24 @@ export function ChatPage() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentPrompt = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
     try {
+      // Check if the prompt is "teste" and return a generic response
+      if (currentPrompt.toLowerCase().trim() === 'teste') {
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: 'Esta é uma resposta genérica de teste. O sistema está funcionando corretamente!',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        setIsLoading(false);
+        return;
+      }
+
       const res = await fetch('http://localhost:8080/analysis-gen', {
         method: 'POST',
         headers: {
@@ -95,7 +118,7 @@ export function ChatPage() {
         },
         body: JSON.stringify({
           fileId: selectedFile.id,
-          prompt: inputMessage,
+          prompt: currentPrompt,
         }),
       });
 
@@ -130,18 +153,18 @@ export function ChatPage() {
     }
   };
 
-  return (
-    <div className="p-6 h-screen flex flex-col">
-      <div className="mx-auto max-w-4xl flex-1 flex flex-col">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-white">Chat com seus arquivos</h1>
+    return (
+    <div className="p-6 h-screen flex flex-col overflow-hidden">
+      <div className="mx-auto max-w-4xl flex-1 flex flex-col min-h-0">
+        <div className="mb-6 flex-shrink-0">
+          <h1 className="text-2xl font-semibold text-white">Chat</h1>
           <p className="text-sm text-white/70">
             Selecione um arquivo e faça perguntas sobre ele
           </p>
         </div>
 
         {/* File Selection */}
-        <div className="mb-6">
+        <div className="mb-6 flex-shrink-0">
           <label className="block text-sm font-medium text-white mb-2">
             Selecione um arquivo:
           </label>
@@ -165,7 +188,7 @@ export function ChatPage() {
         </div>
 
         {/* Chat Messages */}
-        <div className="flex-1 mb-4 overflow-hidden rounded-lg bg-white/10 backdrop-blur-sm">
+        <div className="flex-1 mb-4 min-h-0 rounded-lg bg-white/10 backdrop-blur-sm overflow-hidden">
           <div className="h-full overflow-y-auto p-4 space-y-4">
             {messages.length === 0 ? (
               <div className="text-center text-white/50 py-8">
@@ -205,11 +228,12 @@ export function ChatPage() {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </div>
 
         {/* Message Input */}
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 flex-shrink-0">
           <textarea
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}

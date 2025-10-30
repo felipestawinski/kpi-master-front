@@ -8,6 +8,7 @@ import { IoDocumentSharp } from "react-icons/io5";
 import { PiUsersFill } from "react-icons/pi";
 import { MdLeaderboard } from "react-icons/md";
 import { MdLogout } from "react-icons/md";
+import { IoChatbox } from "react-icons/io5";
 
 export default function Sidebar() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function Sidebar() {
           </button>
           
           <button
-            onClick={() => handleNavigation('/permissions')}
+            onClick={() => handleNavigation('/statistics')}
             className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
           >
             <MdLeaderboard size={20} color='white' />
@@ -63,7 +64,7 @@ export default function Sidebar() {
             onClick={() => handleNavigation('/chat')}
             className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 h-12"
           >
-            <MdLeaderboard size={20} color='white' />
+            <IoChatbox size={20} color='white' />
             <span>Chat</span>
           </button>
         </div>
