@@ -9,16 +9,24 @@ import { PiUsersFill } from "react-icons/pi";
 import { MdLeaderboard } from "react-icons/md";
 import { MdLogout } from "react-icons/md";
 import { IoChatbox } from "react-icons/io5";
+import LoadingPopup from './LoadingPopup';
+import { useLoading } from '@/components/hooks/useLoading';
 
 export default function Sidebar() {
   const router = useRouter();
+  const { isLoading, startLoading, stopLoading } = useLoading();
 
   const handleNavigation = (route: string) => {
+    startLoading();
     router.push(route);
+    setTimeout(() => stopLoading(), 500);
   };
 
   return (
-    <div className=" w-64 text-white flex flex-col justify-between pt-8 text-sm z-10 backdrop-blur-lg">
+    <>
+      <LoadingPopup isOpen={isLoading} />
+
+      <div className=" w-64 text-white flex flex-col justify-between pt-8 text-sm z-10 backdrop-blur-lg">
         <div className="w-64 text-white flex p-4 flex-col space-y-4">
           <button
             onClick={() => handleNavigation('/main')}
@@ -72,8 +80,10 @@ export default function Sidebar() {
         <div className="w-64 text-white flex p-4 flex-col space-y-4 pb-8">
           <button
             onClick={() => {
+              startLoading();
               localStorage.removeItem('token');
               router.push('/login');
+              setTimeout(() => stopLoading(), 500);
             }}
             className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 text-red"
           >
@@ -82,13 +92,14 @@ export default function Sidebar() {
           </button>
 
           <button
-              onClick={() => handleNavigation('/profile')}
-              className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2"
-            >
+            onClick={() => handleNavigation('/profile')}
+            className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2"
+          >
             <CgProfile size={20} color='white' className='inline '/>
             <p>Perfil</p>
           </button> 
         </div>
-     </div>
+      </div>
+    </>
   );
 }
