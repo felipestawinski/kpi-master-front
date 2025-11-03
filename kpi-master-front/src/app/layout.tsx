@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Inter, Roboto, Poppins } from 'next/font/google'
 import "./globals.css";
+import { LoadingProvider } from '@/components/hooks/useLoading';
 
 const inter = Inter({ subsets: ['latin'] })
 // or
@@ -44,7 +45,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={roboto.className}>
-        {children}
+        <LoadingProvider>
+         {children}
+        </LoadingProvider>
       </body>
     </html>
   );

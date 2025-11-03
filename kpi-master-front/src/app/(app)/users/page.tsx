@@ -42,8 +42,6 @@ function UsersPage() {
         },
       });
 
-      console.log('Response status:', res.status);
-
       const data: ApiUser[] = await res.json();
       setUsers(data);
     
@@ -51,6 +49,10 @@ function UsersPage() {
       setError('Failed to fetch users.');
     } finally {
       setLoading(false);
+      users.map((f) => {
+        console.log(f.username);
+      }
+    );
     }
   }
 

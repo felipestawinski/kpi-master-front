@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { CgProfile } from "react-icons/cg";
 import { FaHome } from "react-icons/fa";
 import { MdOutlineManageSearch } from "react-icons/md";
@@ -11,15 +12,25 @@ import { MdLogout } from "react-icons/md";
 import { IoChatbox } from "react-icons/io5";
 import LoadingPopup from './LoadingPopup';
 import { useLoading } from '@/components/hooks/useLoading';
+import { usePathname } from 'next/navigation';
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isLoading, startLoading, stopLoading } = useLoading();
+  const prevPathnameRef = useRef(pathname);
+
+  useEffect(() => {
+    // Only stop loading if pathname actually changed
+    if (prevPathnameRef.current !== pathname) {
+      stopLoading();
+      prevPathnameRef.current = pathname;
+    }
+  }, [pathname, stopLoading]);
 
   const handleNavigation = (route: string) => {
     startLoading();
     router.push(route);
-    setTimeout(() => stopLoading(), 500);
   };
 
   return (
@@ -83,7 +94,6 @@ export default function Sidebar() {
               startLoading();
               localStorage.removeItem('token');
               router.push('/login');
-              setTimeout(() => stopLoading(), 500);
             }}
             className="bg-black/50 hover:bg-black/60 p-3 rounded flex items-center justify-start space-x-2 text-red"
           >
