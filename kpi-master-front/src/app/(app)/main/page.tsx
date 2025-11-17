@@ -5,13 +5,20 @@ import { useRouter } from 'next/navigation';
 import { AiOutlineCloudUpload } from "react-icons/ai";
 import { MdLeaderboard } from "react-icons/md";
 import { MdOutlineManageSearch } from "react-icons/md";
+import OnboardingAssistant from '@/components/OnboardingAssistant';
+import { useLoading } from '@/components/hooks/useLoading';
 
 export default function MainPage() {
   const router = useRouter();
+  const { stopLoading } = useLoading();
   const [username, setUsername] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
+    // Stop any loading state immediately
+    stopLoading();
+    
     const token = localStorage.getItem('token');
     if (!token) {
       alert("User not logged in")
@@ -19,7 +26,6 @@ export default function MainPage() {
       return;
     }
 
- 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const now = Math.floor(Date.now() / 1000); // current time in seconds
@@ -32,14 +38,21 @@ export default function MainPage() {
       }
 
       setUsername(payload.sub || 'User');
-      } catch (error) {
+      
+      // Check if user is new (hasn't completed onboarding)
+      const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+      const isNewUser = localStorage.getItem('isNewUser');
+      
+      if (isNewUser === 'true' && !onboardingCompleted) {
+        setShowOnboarding(true);
+        localStorage.removeItem('isNewUser'); // Clear the flag
+      }
+    } catch (error) {
       console.error('Invalid token');
       localStorage.removeItem('token');
       router.push('/login');
     }
-    
-
-  }, [router]);
+  }, [router, stopLoading]);
 
   useEffect(() => {
     const backgroundTimer = setTimeout(() => {
@@ -50,7 +63,6 @@ export default function MainPage() {
       setIsVisible(true);
     }, 100);
 
-    
     return () => {
       clearTimeout(backgroundTimer);
       clearTimeout(timer);
@@ -67,6 +79,11 @@ export default function MainPage() {
     <div className={`flex min-h-screen p-11 bg-cover bg-left bg-no-repeat transition-all duration-1000 ease-out transform ${
       backgroundVisible ? 'opacity-100' : 'opacity-0'
     }`}>
+
+      {/* Onboarding Assistant */}
+      {showOnboarding && (
+        <OnboardingAssistant onDisable={() => setShowOnboarding(false)} />
+      )}
 
       {/* Welcome message */}
       <div className="flex-1 flex flex-col">

@@ -49,6 +49,7 @@ export default function RegisterPage() {
 
       console.log('Success:', result);
       alert('Registration successful!');
+      localStorage.setItem('isNewUser', 'true')
       
       
       router.push('/login');
