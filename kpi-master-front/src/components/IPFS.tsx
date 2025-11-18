@@ -1,40 +1,45 @@
+'use client'
+
 export default function WhatIsIPFS() {
     return (
-        <section className="min-h-screen flex items-center justify-center py-16 px-4">
-            <div className="max-w-4xl w-full">
+        <section className="min-h-screen flex items-center justify-center py-16 px-4 relative" style={{ backgroundColor: '#1e2938' }}>
+
+            <div className="max-w-3xl w-full relative z-10">
                 {/* Header with gradient */}
-                <div className="text-center mb-12">
-                    <div className="inline-block mb-4">
+                <div className="text-center mb-16">
+                    <div className="inline-block mb-6">
                         <img 
-                            src="/ipfs-logo.png" 
+                            src="/ipfs.tsx.svg" 
                             alt="IPFS Logo" 
-                            className="h-20 w-20 object-contain mx-auto drop-shadow-lg"
+                            className="h-24 w-24 object-contain mx-auto drop-shadow-2xl"
+                            style={{ filter: 'brightness(0) invert(1)' }}
                         />
                     </div>
-                    <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                        O que é IPFS?
+                    <h2 className="text-6xl font-bold text-gray-100 mb-8 tracking-wider">
+                        IPFS?
                     </h2>
-                    <div className="w-24 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto rounded-full"></div>
-                </div>
-
-                {/* Content cards */}
-                <div className="space-y-6">
-                    <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100">
-                        <p className="text-gray-700 leading-relaxed text-lg">
-                            IPFS (InterPlanetary File System) é um protocolo de rede peer-to-peer projetado para criar um sistema de armazenamento e compartilhamento de arquivos distribuído e descentralizado. Ele permite que os usuários armazenem e acessem arquivos de maneira eficiente, utilizando uma rede global de nós.
+                    
+                    <div className="text-left space-y-8 text-gray-100 max-w-2xl mx-auto">
+                        <p className="text-2xl leading-relaxed font-light text-center mb-8 tracking-wide">
+                            <span className="text-orange-500">I</span>nter<span className="text-orange-500">P</span>lanetary <span className="text-orange-500">F</span>ile <span className="text-orange-500">S</span>ystem
                         </p>
-                    </div>
-
-                    <div className="bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100">
-                        <p className="text-gray-700 leading-relaxed text-lg">
-                            Diferente dos sistemas tradicionais de armazenamento baseados em servidores centralizados, o IPFS utiliza uma abordagem distribuída, onde os arquivos são divididos em pequenos pedaços e armazenados em vários nós na rede. Cada arquivo é identificado por um hash criptográfico único, o que garante a integridade e a autenticidade dos dados.
-                        </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-blue-50 to-purple-50 backdrop-blur-lg rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-blue-100">
-                        <p className="text-gray-700 leading-relaxed text-lg">
-                            O IPFS oferece várias vantagens, como maior resistência à censura, redução de custos de armazenamento e maior eficiência na distribuição de conteúdo. Ele é amplamente utilizado em aplicações descentralizadas (dApps), compartilhamento de arquivos e outras soluções que requerem um sistema de armazenamento robusto e confiável.
-                        </p>
+                        
+                        <ul className="space-y-6 text-lg tracking-wide">
+                            <li className="flex items-start">
+                                <span className="mr-3 mt-1.5 text-orange-500 text-3xl">•</span>
+                                <span>Um protocolo peer-to-peer descentralizado para armazenamento e compartilhamento de arquivos</span>
+                            </li>
+                            
+                            <li className="flex items-start">
+                                <span className="mr-3 mt-1.5 text-orange-500 text-3xl">•</span>
+                                <span>Cada arquivo é identificado por um hash criptográfico único, garantindo integridade e autenticidade</span>
+                            </li>
+                            
+                            <li className="flex items-start">
+                                <span className="mr-3 mt-1.5 text-orange-500 text-3xl">•</span>
+                                <span>Maior resistência à censura, custos reduzidos e distribuição eficiente de conteúdo</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>

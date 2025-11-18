@@ -7,6 +7,7 @@ import { Upload, File, X, Image as ImageIcon, Check } from 'lucide-react';
 export function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [filename, setFilename] = useState('');
+  const [institution, setInstitution] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -63,6 +64,7 @@ export function UploadPage() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('filename', filename.trim());
+      formData.append('institution', institution.trim());
 
       const res = await fetch('http://localhost:8080/upload', {
         method: 'POST',
@@ -259,20 +261,44 @@ export function UploadPage() {
             </div>
           </div>
 
-          {/* Filename Input */}
+          {/* Filename and Institution Inputs */}
           <div className="backdrop-blur-xl bg-black/40 rounded-2xl shadow-2xl border border-white/30 p-8 slide-up">
-            <label className="block text-sm font-semibold uppercase tracking-wider text-white/90 mb-3 drop-shadow-lg flex items-center space-x-2">
-              <File className="w-4 h-4 text-amber-300" />
-              <span>Nome do Arquivo</span>
-            </label>
-            <input
-              type="text"
-              value={filename}
-              onChange={(e) => setFilename(e.target.value)}
-              placeholder="Digite um nome para seu arquivo"
-              className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-amber-500/70 focus:border-amber-500/70 transition-all backdrop-blur-sm shadow-lg"
-            />
-            <p className="mt-2 text-xs text-white/50">Este nome será usado para identificar o arquivo no sistema</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Filename Input */}
+              <div>
+                <label className="block text-sm font-semibold uppercase tracking-wider text-white/90 mb-3 drop-shadow-lg flex items-center space-x-2">
+                  <File className="w-4 h-4 text-amber-300" />
+                  <span>Nome do Arquivo</span>
+                  <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={filename}
+                  onChange={(e) => setFilename(e.target.value)}
+                  placeholder="Digite o nome do arquivo"
+                  className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-amber-500/70 focus:border-amber-500/70 transition-all backdrop-blur-sm shadow-lg"
+                />
+              </div>
+
+              {/* Institution Input */}
+              <div>
+                <label className="block text-sm font-semibold uppercase tracking-wider text-white/90 mb-3 drop-shadow-lg flex items-center space-x-2">
+                  <File className="w-4 h-4 text-amber-300" />
+                  <span>Instituição</span>
+                  <span className="text-white/50 text-xs font-normal normal-case">(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={institution}
+                  onChange={(e) => setInstitution(e.target.value)}
+                  placeholder="Digite a instituição"
+                  className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-amber-500/70 focus:border-amber-500/70 transition-all backdrop-blur-sm shadow-lg"
+                />
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-white/50">
+              <span className="text-red-400">*</span> Campo obrigatório
+            </p>
           </div>
 
           {/* Success Message */}

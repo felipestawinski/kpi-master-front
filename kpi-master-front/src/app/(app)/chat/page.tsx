@@ -20,6 +20,8 @@ type ChatMessage = {
   timestamp: Date;
 };
 
+type SelectionMode = 'files' | 'institutions';
+
 const DEFAULT_TEMPLATE_QUESTIONS = [
   "Provide a full overview of the file",
   "Are the dataset clean? Are there NaN values?",
@@ -40,6 +42,9 @@ export function ChatPage() {
   const [templateQuestions, setTemplateQuestions] = useState<string[]>(DEFAULT_TEMPLATE_QUESTIONS);
   const [isEditingTemplates, setIsEditingTemplates] = useState(false);
   const [editedQuestions, setEditedQuestions] = useState<string[]>([]);
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>('files');
+  const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -52,9 +57,9 @@ export function ChatPage() {
   }, [messages, isLoading]);
 
   // Save chat history to localStorage
-  const saveChatHistory = (fileId: number, chatMessages: ChatMessage[]) => {
+  const saveChatHistory = (identifier: string, chatMessages: ChatMessage[]) => {
     const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-    chatHistory[fileId] = chatMessages.map(msg => ({
+    chatHistory[identifier] = chatMessages.map(msg => ({
       ...msg,
       timestamp: msg.timestamp.toISOString()
     }));
@@ -62,9 +67,9 @@ export function ChatPage() {
   };
 
   // Load chat history from localStorage
-  const loadChatHistory = (fileId: number): ChatMessage[] => {
+  const loadChatHistory = (identifier: string): ChatMessage[] => {
     const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-    const fileHistory = chatHistory[fileId];
+    const fileHistory = chatHistory[identifier];
     if (fileHistory && Array.isArray(fileHistory)) {
       return fileHistory.map((msg: any) => ({
         ...msg,
@@ -74,14 +79,82 @@ export function ChatPage() {
     return [];
   };
 
-  // Clear chat history for current file
+  // Clear chat history for current selection
   const clearChatHistory = () => {
-    if (!selectedFile) return;
+    const identifier = getChatIdentifier();
+    if (!identifier) return;
     
     const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-    delete chatHistory[selectedFile.id];
+    delete chatHistory[identifier];
     localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
     setMessages([]);
+  };
+
+  // Get unique institutions from files
+  const getInstitutions = (): string[] => {
+    const institutions = new Set(files.map(f => f.institution));
+    return Array.from(institutions).sort();
+  };
+
+  // Get files for selected institution
+  const getFilesForInstitution = (institution: string): ApiFile[] => {
+    return files.filter(f => f.institution === institution);
+  };
+
+  // Get chat identifier for storage
+  const getChatIdentifier = (): string | null => {
+    if (selectionMode === 'files' && selectedFile) {
+      return `file_${selectedFile.id}`;
+    }
+    if (selectionMode === 'institutions' && selectedInstitution) {
+      return `institution_${selectedInstitution}`;
+    }
+    return null;
+  };
+
+  // Toggle file selection in multi-select mode
+  const toggleFileSelection = (fileId: number) => {
+    const newSelection = new Set(selectedFileIds);
+    if (newSelection.has(fileId)) {
+      newSelection.delete(fileId);
+    } else {
+      newSelection.add(fileId);
+    }
+    setSelectedFileIds(newSelection);
+  };
+
+  // Select all files for institution
+  const selectAllFilesForInstitution = (institution: string) => {
+    const institutionFiles = getFilesForInstitution(institution);
+    const allIds = new Set(institutionFiles.map(f => f.id));
+    setSelectedFileIds(allIds);
+  };
+
+  // Handle mode change
+  const handleModeChange = (mode: SelectionMode) => {
+    setSelectionMode(mode);
+    setSelectedFile(null);
+    setSelectedInstitution(null);
+    setSelectedFileIds(new Set());
+    setMessages([]);
+    setIsDropdownOpen(false);
+  };
+
+  // Handle institution selection
+  const handleInstitutionSelect = (institution: string) => {
+    setSelectedInstitution(institution);
+    selectAllFilesForInstitution(institution);
+    const identifier = `institution_${institution}`;
+    setMessages(loadChatHistory(identifier));
+    setIsDropdownOpen(false);
+  };
+
+  // Handle file selection in files mode
+  const handleFileSelect = (file: ApiFile) => {
+    setSelectedFile(file);
+    const identifier = `file_${file.id}`;
+    setMessages(loadChatHistory(identifier));
+    setIsDropdownOpen(false);
   };
 
   useEffect(() => {
@@ -146,7 +219,11 @@ export function ChatPage() {
   }, [username]);
 
   const sendMessage = async () => {
-    if (!inputMessage.trim() || !selectedFile || isLoading) return;
+    if (!inputMessage.trim() || isLoading) return;
+    
+    // Check if we have any files to analyze
+    const hasSelection = selectionMode === 'files' ? selectedFile : (selectedInstitution && selectedFileIds.size > 0);
+    if (!hasSelection) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -171,10 +248,16 @@ export function ChatPage() {
         };
         const finalMessages = [...updatedMessages, assistantMessage];
         setMessages(finalMessages);
-        saveChatHistory(selectedFile.id, finalMessages);
+        const identifier = getChatIdentifier();
+        if (identifier) saveChatHistory(identifier, finalMessages);
         setIsLoading(false);
         return;
       }
+
+      // Prepare file IDs for analysis
+      const fileIds = selectionMode === 'files' 
+        ? [selectedFile!.id] 
+        : Array.from(selectedFileIds);
 
       const res = await fetch('http://localhost:8080/analysis-gen', {
         method: 'POST',
@@ -183,7 +266,7 @@ export function ChatPage() {
           ...(token ? { Authorization: `${token}` } : {}),
         },
         body: JSON.stringify({
-          fileId: selectedFile.id,
+          fileIds: fileIds,
           prompt: currentPrompt,
         }),
       });
@@ -200,7 +283,8 @@ export function ChatPage() {
 
       const finalMessages = [...updatedMessages, assistantMessage];
       setMessages(finalMessages);
-      saveChatHistory(selectedFile.id, finalMessages);
+      const identifier = getChatIdentifier();
+      if (identifier) saveChatHistory(identifier, finalMessages);
     } catch (err) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -210,7 +294,8 @@ export function ChatPage() {
       };
       const finalMessages = [...updatedMessages, errorMessage];
       setMessages(finalMessages);
-      saveChatHistory(selectedFile.id, finalMessages);
+      const identifier = getChatIdentifier();
+      if (identifier) saveChatHistory(identifier, finalMessages);
     } finally {
       setIsLoading(false);
     }
@@ -327,8 +412,32 @@ export function ChatPage() {
 
         {/* Custom File Selection Dropdown */}
         <div className="mb-6 flex-shrink-0" ref={dropdownRef}>
+          {/* Mode Selection Toggle */}
+          <div className="mb-4 flex items-center space-x-2">
+            <button
+              onClick={() => handleModeChange('files')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                selectionMode === 'files'
+                  ? 'bg-amber-500 text-white shadow-lg'
+                  : 'bg-black/30 text-white/70 border border-white/20 hover:bg-black/40'
+              }`}
+            >
+              Arquivos
+            </button>
+            <button
+              onClick={() => handleModeChange('institutions')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                selectionMode === 'institutions'
+                  ? 'bg-amber-500 text-white shadow-lg'
+                  : 'bg-black/30 text-white/70 border border-white/20 hover:bg-black/40'
+              }`}
+            >
+              Instituições
+            </button>
+          </div>
+
           <label className="block text-sm font-medium text-white mb-2 drop-shadow-lg">
-            Selecione um arquivo:
+            {selectionMode === 'files' ? 'Selecione um arquivo:' : 'Selecione uma instituição:'}
           </label>
           <div className="relative">
             <button
@@ -340,13 +449,26 @@ export function ChatPage() {
                   <FileText className="w-5 h-5 text-amber-300" />
                 </div>
                 <div className="text-left">
-                  {selectedFile ? (
-                    <>
-                      <div className="font-medium drop-shadow-md">{selectedFile.filename}</div>
-                      <div className="text-sm text-white/80 drop-shadow-md">{selectedFile.institution}</div>
-                    </>
+                  {selectionMode === 'files' ? (
+                    selectedFile ? (
+                      <>
+                        <div className="font-medium drop-shadow-md">{selectedFile.filename}</div>
+                        <div className="text-sm text-white/80 drop-shadow-md">{selectedFile.institution}</div>
+                      </>
+                    ) : (
+                      <div className="text-white/80 drop-shadow-md">Escolha um arquivo...</div>
+                    )
                   ) : (
-                    <div className="text-white/80 drop-shadow-md">Escolha um arquivo...</div>
+                    selectedInstitution ? (
+                      <>
+                        <div className="font-medium drop-shadow-md">{selectedInstitution}</div>
+                        <div className="text-sm text-white/80 drop-shadow-md">
+                          {selectedFileIds.size} arquivo(s) selecionado(s)
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-white/80 drop-shadow-md">Escolha uma instituição...</div>
+                    )
                   )}
                 </div>
               </div>
@@ -359,63 +481,124 @@ export function ChatPage() {
 
             {isDropdownOpen && (
               <div className="absolute z-10 w-full mt-2 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl border border-white/30 overflow-hidden dropdown-enter">
-                <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                  {files.length === 0 ? (
-                    <div className="p-4 text-center text-gray-600 font-medium">
-                      Nenhum arquivo disponível
-                    </div>
+                <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                  {selectionMode === 'files' ? (
+                    files.length === 0 ? (
+                      <div className="p-4 text-center text-gray-600 font-medium">
+                        Nenhum arquivo disponível
+                      </div>
+                    ) : (
+                      files.map((file, index) => (
+                        <button
+                          key={file.id}
+                          onClick={() => handleFileSelect(file)}
+                          className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 flex items-center space-x-3 group ${
+                            selectedFile?.id === file.id ? 'bg-amber-100' : ''
+                          } ${index !== 0 ? 'border-t border-gray-100' : ''}`}
+                        >
+                          <div className={`p-2 rounded-lg transition-colors ${
+                            selectedFile?.id === file.id
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-gray-100 text-gray-600 group-hover:bg-amber-100'
+                          }`}>
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 truncate">
+                              {file.filename}
+                            </div>
+                            <div className="text-sm text-gray-500 truncate">
+                              {file.institution} • {file.writer}
+                            </div>
+                          </div>
+                          {selectedFile?.id === file.id && (
+                            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
+                          )}
+                        </button>
+                      ))
+                    )
                   ) : (
-                    files.map((file, index) => (
-                      <button
-                        key={file.id}
-                        onClick={() => {
-                          setSelectedFile(file);
-                          setMessages(loadChatHistory(file.id));
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 flex items-center space-x-3 group ${
-                          selectedFile?.id === file.id ? 'bg-amber-100' : ''
-                        } ${index !== 0 ? 'border-t border-gray-100' : ''}`}
-                        style={{
-                          animationDelay: `${index * 0.05}s`,
-                        }}
-                      >
-                        <div className={`p-2 rounded-lg transition-colors ${
-                          selectedFile?.id === file.id
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-gray-100 text-gray-600 group-hover:bg-amber-100'
-                        }`}>
-                          <FileText className="w-4 h-4" />
+                    getInstitutions().length === 0 ? (
+                      <div className="p-4 text-center text-gray-600 font-medium">
+                        Nenhuma instituição disponível
+                      </div>
+                    ) : (
+                      getInstitutions().map((institution, index) => (
+                        <div key={institution} className={index !== 0 ? 'border-t border-gray-100' : ''}>
+                          <button
+                            onClick={() => handleInstitutionSelect(institution)}
+                            className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 ${
+                              selectedInstitution === institution ? 'bg-amber-50' : ''
+                            }`}
+                          >
+                            <div className="font-medium text-gray-900">{institution}</div>
+                            <div className="text-sm text-gray-500">
+                              {getFilesForInstitution(institution).length} arquivo(s)
+                            </div>
+                          </button>
+                          
+                          {selectedInstitution === institution && (
+                            <div className="bg-gray-50 px-4 pb-4 space-y-2">
+                              <div className="text-xs text-gray-600 font-medium mb-2">
+                                Selecione os arquivos:
+                              </div>
+                              {getFilesForInstitution(institution).map((file) => (
+                                <label
+                                  key={file.id}
+                                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedFileIds.has(file.id)}
+                                    onChange={() => toggleFileSelection(file.id)}
+                                    className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-medium text-gray-900 truncate">
+                                      {file.filename}
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate">
+                                      {file.writer}
+                                    </div>
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">
-                            {file.filename}
-                          </div>
-                          <div className="text-sm text-gray-500 truncate">
-                            {file.institution} • {file.writer}
-                          </div>
-                        </div>
-                        {selectedFile?.id === file.id && (
-                          <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
-                        )}
-                      </button>
-                    ))
+                      ))
+                    )
                   )}
                 </div>
               </div>
             )}
           </div>
 
-          {selectedFile && (
+          {selectionMode === 'files' && selectedFile && (
             <div className="mt-3 p-3 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-100 text-sm flex items-center space-x-2 message-enter shadow-lg backdrop-blur-sm">
               <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-lg"></div>
               <span className="drop-shadow-md">Arquivo selecionado: <strong>{selectedFile.filename}</strong></span>
             </div>
           )}
+
+          {selectionMode === 'institutions' && selectedInstitution && (
+            <div className="mt-3 p-3 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-100 text-sm message-enter shadow-lg backdrop-blur-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-lg"></div>
+                <span className="drop-shadow-md">
+                  Instituição: <strong>{selectedInstitution}</strong>
+                </span>
+              </div>
+              <div className="text-xs text-amber-200/80 drop-shadow-md">
+                {selectedFileIds.size} de {getFilesForInstitution(selectedInstitution).length} arquivo(s) selecionado(s)
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Template Questions Section */}
-        {selectedFile && messages.length === 0 && (
+        {(selectedFile || selectedInstitution) && messages.length === 0 && (
           <div className="mb-4 flex-shrink-0">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-white drop-shadow-lg">
@@ -577,15 +760,30 @@ export function ChatPage() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={selectedFile ? "Digite sua pergunta sobre o arquivo..." : "Selecione um arquivo primeiro"}
-              disabled={!selectedFile || isLoading}
+              placeholder={
+                selectionMode === 'files' 
+                  ? (selectedFile ? "Digite sua pergunta sobre o arquivo..." : "Selecione um arquivo primeiro")
+                  : (selectedInstitution && selectedFileIds.size > 0 
+                      ? "Digite sua pergunta sobre os arquivos selecionados..." 
+                      : "Selecione uma instituição e arquivos primeiro")
+              }
+              disabled={
+                (selectionMode === 'files' && !selectedFile) || 
+                (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) || 
+                isLoading
+              }
               className="w-full p-4 pr-12 rounded-xl bg-black/40 border border-white/30 text-white placeholder-white/70 backdrop-blur-md resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/70 focus:border-amber-500/70 transition-all duration-300 custom-scrollbar disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
               rows={3}
             />
           </div>
           <button
             onClick={sendMessage}
-            disabled={!inputMessage.trim() || !selectedFile || isLoading}
+            disabled={
+              !inputMessage.trim() || 
+              (selectionMode === 'files' && !selectedFile) || 
+              (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) || 
+              isLoading
+            }
             className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-300 shadow-2xl hover:shadow-amber-500/50 flex items-center space-x-2 group"
           >
             <span className="font-medium">Enviar</span>

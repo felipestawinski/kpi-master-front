@@ -24,7 +24,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const finisherOptions = {
     count: 8,
     size: { min: 200, max: 600, pulse: 0 },
-    speed: { x: { min: 0.1, max: 0.3 }, y: { min: 0.1, max: 0.4 } },
+    speed: { x: { min: 0.08, max: 0.18 }, y: { min: 0.08, max: 0.25 } },
     colors: {
       background: '#fe9a00',
       particles: ['#fde68a', '#fcd34d', '#f59e0b', '#b45309'],

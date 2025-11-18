@@ -1,5 +1,5 @@
 'use client';
-
+import { FaRegCalendar } from "react-icons/fa";
 import AuthGuard from '@/components/AuthGuard';
 import { useEffect, useState } from 'react';
 import { Search as SearchIcon, FileText, Building2, User, X, Download, Save } from 'lucide-react';
@@ -365,7 +365,13 @@ export function SearchPage() {
                         <span>Autor</span>
                       </div>
                     </Th>
-                    <Th>Data</Th>
+                    <Th>
+                      <div className="flex items-center space-x-2">
+                        <FaRegCalendar className="w-4 h-4" />
+                        <span>Data</span>
+                      </div>
+                    </Th>
+                    
                     <Th>Arquivo</Th>
                   </tr>
                 </thead>
