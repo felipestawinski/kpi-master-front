@@ -38,7 +38,7 @@ export default function RegisterPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to register');
+        throw new Error('Falha ao registrar');
       }
 
       const result = await response.text();
@@ -47,16 +47,16 @@ export default function RegisterPage() {
         throw new Error(result);
       }
 
-      console.log('Success:', result);
-      alert('Registration successful!');
+      console.log('Sucesso:', result);
+      alert('Registro realizado com sucesso!');
       localStorage.setItem('isNewUser', 'true')
       
       setTimeout(() => {
         router.push('/login');
       }, 1000);
     } catch (error) {
-      console.error('Error:', error);
-      alert('Registration failed.');
+      console.error('Erro:', error);
+      alert('Falha no registro.');
       setIsRedirecting(false);
     }
   };
@@ -82,13 +82,13 @@ export default function RegisterPage() {
               </svg>
             </div>
             <h1 className="text-5xl font-bold mb-4 leading-tight">
-              Join<br />
+              Entre para o<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
                 KPI Master
               </span>
             </h1>
             <p className="text-gray-400 text-lg leading-relaxed max-w-md">
-              Start tracking and optimizing your performance metrics today.
+              Comece a acompanhar e otimizar suas métricas de desempenho hoje.
             </p>
           </div>
           
@@ -96,15 +96,15 @@ export default function RegisterPage() {
           <div className="space-y-4 mt-8">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <span className="text-gray-300">Real-time analytics</span>
+              <span className="text-gray-300">Análises em tempo real</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <span className="text-gray-300">Intuitive dashboards</span>
+              <span className="text-gray-300">Dashboards intuitivos</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <span className="text-gray-300">Collaborative workspace</span>
+              <span className="text-gray-300">Área de trabalho colaborativa</span>
             </div>
           </div>
         </div>
@@ -129,8 +129,8 @@ export default function RegisterPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-[#1e2938] mb-2">Create account</h2>
-            <p className="text-gray-500">Fill in your details to get started</p>
+            <h2 className="text-3xl font-bold text-[#1e2938] mb-2">Criar conta</h2>
+            <p className="text-gray-500">Preencha seus dados para começar</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -139,7 +139,7 @@ export default function RegisterPage() {
               <input
                 type="email"
                 name="email"
-                placeholder="you@example.com"
+                placeholder="voce@exemplo.com"
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
@@ -153,11 +153,11 @@ export default function RegisterPage() {
             </div>
 
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
               <input
                 type="password"
                 name="password"
-                placeholder="Create a strong password"
+                placeholder="Crie uma senha forte"
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
@@ -171,11 +171,11 @@ export default function RegisterPage() {
             </div>
 
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Nome de usuário</label>
               <input
                 type="text"
                 name="username"
-                placeholder="Choose a username"
+                placeholder="Escolha um nome de usuário"
                 value={formData.username}
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
@@ -189,11 +189,11 @@ export default function RegisterPage() {
             </div>
 
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Institution</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Instituição</label>
               <input
                 type="text"
                 name="institution"
-                placeholder="Your institution"
+                placeholder="Sua instituição"
                 value={formData.institution}
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
@@ -206,11 +206,11 @@ export default function RegisterPage() {
             </div>
 
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Cargo</label>
               <input
                 type="text"
                 name="role"
-                placeholder="Your role"
+                placeholder="Seu cargo"
                 value={formData.role}
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
@@ -223,11 +223,11 @@ export default function RegisterPage() {
             </div>
 
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Access Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de acesso</label>
               <input
                 type="text"
                 name="accessType"
-                placeholder="Access type"
+                placeholder="Tipo de acesso"
                 value={formData.accessType}
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl 
@@ -257,10 +257,10 @@ export default function RegisterPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Creating account...
+                  Criando conta...
                 </span>
               ) : (
-                'Create account'
+                'Criar conta'
               )}
             </button>
           </form>
@@ -271,7 +271,7 @@ export default function RegisterPage() {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">Already have an account?</span>
+                <span className="px-4 bg-white text-gray-500">Já tem uma conta?</span>
               </div>
             </div>
 
@@ -286,7 +286,7 @@ export default function RegisterPage() {
                        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               disabled={isRedirecting}
             >
-              Sign in instead
+              Entrar
             </button>
           </div>
         </div>
@@ -301,7 +301,7 @@ export default function RegisterPage() {
                 <div className="w-12 h-12 border-4 border-orange-200 rounded-full"></div>
                 <div className="absolute top-0 left-0 w-12 h-12 border-4 border-orange-500 rounded-full border-t-transparent animate-spin"></div>
               </div>
-              <p className="text-[#1e2938] font-medium">Setting up your account...</p>
+              <p className="text-[#1e2938] font-medium">Configurando sua conta...</p>
             </div>
           </div>
         </div>

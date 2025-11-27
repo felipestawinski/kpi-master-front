@@ -18,6 +18,7 @@ type ChatMessage = {
   type: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  image?: string; // Base64 encoded image or URL
 };
 
 type SelectionMode = 'files' | 'institutions';
@@ -274,11 +275,19 @@ export function ChatPage() {
       const response = await res.text();
       const payload = JSON.parse(response);
 
+      if (payload.hasImage) {
+
+        console.log('imagem:', payload.image);
+      } else {
+        console.log('sem imagem');
+      }
+
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
         content: payload.text_response || response,
         timestamp: new Date(),
+        image: payload.image || undefined,
       };
 
       const finalMessages = [...updatedMessages, assistantMessage];
@@ -726,6 +735,15 @@ export function ChatPage() {
                     }`}
                   >
                     <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                    {message.image && (
+                      <div className="mt-3">
+                        <img 
+                          src={message.image.startsWith('data:') ? message.image : `data:image/png;base64,${message.image}`}
+                          alt="Generated visualization"
+                          className="rounded-lg max-w-full h-auto border border-gray-200 shadow-lg"
+                        />
+                      </div>
+                    )}
                     <div className={`text-xs mt-2 ${
                       message.type === 'user' ? 'text-white/90' : 'text-gray-600'
                     }`}>

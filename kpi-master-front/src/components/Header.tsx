@@ -30,7 +30,7 @@ export default function Header () {
                 </button>
 
                 <button
-                    onClick={() => handleNavigation('/main')}
+                    onClick={() => handleNavigation('/register')}
                     className="group bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-full transition-all duration-300 hover:scale-105 shadow-lg"
                 >
                     <span className="text-white font-medium">Registrar</span>

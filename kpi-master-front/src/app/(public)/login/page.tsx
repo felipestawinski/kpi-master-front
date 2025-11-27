@@ -22,7 +22,7 @@ export default function LoginPage() {
 
       const resultText = await response.text();
 
-      if (!response.ok) throw new Error(resultText || 'Login failed');
+      if (!response.ok) throw new Error(resultText || 'Login falhou');
 
       const payload = JSON.parse(resultText);
       localStorage.setItem('token', payload.token);
@@ -33,14 +33,14 @@ export default function LoginPage() {
       localStorage.setItem('email', payload.email);
       
       console.log("result text:" + resultText);
-      alert('Login successful!');
+      alert('Login realizado com sucesso!');
 
       setTimeout(() => {
       router.push('/main');
       }, 1000);
 
     } catch (error: any) {
-      alert('Login failed: ' + error.message);
+      alert('Falha no login: ' + error.message);
       setIsRedirecting(false);
     }
   };
@@ -66,13 +66,13 @@ export default function LoginPage() {
               </svg>
             </div>
             <h1 className="text-5xl font-bold mb-4 leading-tight">
-              Welcome to<br />
+              Bem-vindo ao<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
                 KPI Master
               </span>
             </h1>
             <p className="text-gray-400 text-lg leading-relaxed max-w-md">
-              Track, analyze, and optimize your key performance indicators with precision and elegance.
+              Acompanhe, analise e otimize seus indicadores-chave de desempenho com precisão e elegância.
             </p>
           </div>
           
@@ -80,15 +80,15 @@ export default function LoginPage() {
           <div className="space-y-4 mt-8">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <span className="text-gray-300">Real-time analytics</span>
+              <span className="text-gray-300">Análises em tempo real</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <span className="text-gray-300">Intuitive dashboards</span>
+              <span className="text-gray-300">Painéis intuitivos</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <span className="text-gray-300">Collaborative workspace</span>
+              <span className="text-gray-300">Espaço de trabalho colaborativo</span>
             </div>
           </div>
         </div>
@@ -113,17 +113,17 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-10">
-            <h2 className="text-3xl font-bold text-[#1e2938] mb-2">Sign in</h2>
-            <p className="text-gray-500">Enter your credentials to continue</p>
+            <h2 className="text-3xl font-bold text-[#1e2938] mb-2">Entrar</h2>
+            <p className="text-gray-500">Digite suas credenciais para continuar</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
               <div className="relative">
                 <input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="voce@exemplo.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl 
@@ -138,11 +138,11 @@ export default function LoginPage() {
             </div>
 
             <div className="group">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
               <div className="relative">
                 <input
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Digite sua senha"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl 
@@ -174,10 +174,10 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing in...
+                  Entrando...
                 </span>
               ) : (
-                'Sign in'
+                'Entrar'
               )}
             </button>
           </form>
@@ -188,7 +188,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">New here?</span>
+                <span className="px-4 bg-white text-gray-500">Novo por aqui?</span>
               </div>
             </div>
 
@@ -203,7 +203,7 @@ export default function LoginPage() {
                        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               disabled={isRedirecting}
             >
-              Create an account
+              Criar uma conta
             </button>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function LoginPage() {
                 <div className="w-12 h-12 border-4 border-orange-200 rounded-full"></div>
                 <div className="absolute top-0 left-0 w-12 h-12 border-4 border-orange-500 rounded-full border-t-transparent animate-spin"></div>
               </div>
-              <p className="text-[#1e2938] font-medium">Loading your dashboard...</p>
+              <p className="text-[#1e2938] font-medium">Carregando seu painel...</p>
             </div>
           </div>
         </div>
