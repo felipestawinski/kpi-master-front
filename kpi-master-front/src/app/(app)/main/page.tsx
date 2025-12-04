@@ -76,59 +76,88 @@ export default function MainPage() {
   const [backgroundVisible, setBackgroundVisible] = useState(false);
 
   return (
-    <div className={`flex min-h-screen p-11 bg-cover bg-left bg-no-repeat transition-all duration-1000 ease-out transform ${
+    <div className={`relative flex min-h-screen p-11 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden transition-all duration-1000 ease-out transform ${
       backgroundVisible ? 'opacity-100' : 'opacity-0'
     }`}>
-
+      {/* Subtle animated background pattern */}
+      {/* <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-900/10 via-transparent to-transparent"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent"></div> */}
+      
       {/* Onboarding Assistant */}
       {showOnboarding && (
         <OnboardingAssistant onDisable={() => setShowOnboarding(false)} />
       )}
 
       {/* Welcome message */}
-      <div className="flex-1 flex flex-col">
+      <div className="relative z-10 flex-1 flex flex-col">
         <div className={`flex-initial space-y-5 transition-all duration-1000 ease-out ${
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}>
-          <h1 className="text-4xl font-semibold text-gray-900">Olá,</h1>
-          <h1 className="text-5xl font-semibold text-gray-900">{username}</h1>
-          <p className="text-3xl mt-4 text-gray-900">Bem vindo ao seu painel.</p>
+          <h1 className="text-4xl font-light text-gray-400">Olá,</h1>
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">{username}</h1>
+          <p className="text-2xl mt-4 text-gray-400 font-light">Bem vindo ao seu painel.</p>
         </div>
 
         {/* Introduction */}
-        <div className='flex-1 flex items-center flex-col justify-center space-y-4'>
-          <p className={`text-gray-800 transition-all duration-1000 delay-300 ease-out ${
+        <div className='flex-1 flex items-center flex-col justify-center space-y-8'>
+          <p className={`text-xl text-gray-400 font-light transition-all duration-1000 delay-300 ease-out ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            Aqui você pode...
+            O que você gostaria de fazer?
           </p>
           
-          <div className='flex flex-row space-x-10'>  
-            <div className='flex flex-col flex-1 backdrop-blur-sm rounded-full bg-white/25 hover:bg-white/40 cursor-pointer' onClick={() => handleNavigation('/search')} >
-              <button className={` p-8 text-gray-800 flex justify-center items-center flex-col w-full transition-all duration-1000 delay-500 ease-out transform  ${
+          <div className='flex flex-row gap-8 w-full max-w-5xl px-4'>  
+            <div 
+              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-              }`}>
-                Pesquisar documentos
-                <MdOutlineManageSearch size={50} color='black'/>
+              }`}
+              style={{ transitionDelay: '500ms' }}
+              onClick={() => handleNavigation('/search')}
+            >
+              <button className="p-10 text-gray-300 flex justify-center items-center flex-col w-full space-y-4 transition-all duration-300">
+                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-110">
+                  <MdOutlineManageSearch size={56} className="text-gray-400 group-hover:text-amber-400 transition-colors duration-300"/>
+                </div>
+                <span className="text-lg font-medium group-hover:text-amber-400 transition-colors duration-300">Pesquisar documentos</span>
+                <span className="text-sm text-gray-500 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Encontre documentos rapidamente
+                </span>
               </button>
             </div>
             
-            <div className='flex flex-col flex-1 backdrop-blur-sm rounded-full bg-white/25 hover:bg-white/40 cursor-pointer' onClick={() => handleNavigation('/upload')}>
-              <button className={`  p-8 rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all 
-              duration-1000 delay-700 ease-out transform  ${
+            <div 
+              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-              }`}>
-                Carregar documentos
-                <AiOutlineCloudUpload size={50} color='black'/>
+              }`}
+              style={{ transitionDelay: '700ms' }}
+              onClick={() => handleNavigation('/upload')}
+            >
+              <button className="p-10 text-gray-300 flex justify-center items-center flex-col w-full space-y-4 transition-all duration-300">
+                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-110">
+                  <AiOutlineCloudUpload size={56} className="text-gray-400 group-hover:text-amber-400 transition-colors duration-300"/>
+                </div>
+                <span className="text-lg font-medium group-hover:text-amber-400 transition-colors duration-300">Carregar documentos</span>
+                <span className="text-sm text-gray-500 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Faça upload de novos arquivos
+                </span>
               </button>
             </div>
             
-            <div className='flex flex-col flex-1 backdrop-blur-sm rounded-full bg-white/25 hover:bg-white/40 cursor-pointer' onClick={() => handleNavigation('/statistics')}>
-              <button className={`  p-8  rounded text-gray-800 flex justify-center items-center flex-col w-full transition-all duration-1000 delay-900 ease-out transform  ${
+            <div 
+              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-              }`}>
-                Gerar estatísticas
-                <MdLeaderboard size={50} color='black' />
+              }`}
+              style={{ transitionDelay: '900ms' }}
+              onClick={() => handleNavigation('/statistics')}
+            >
+              <button className="p-10 text-gray-300 flex justify-center items-center flex-col w-full space-y-4 transition-all duration-300">
+                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-110">
+                  <MdLeaderboard size={56} className="text-gray-400 group-hover:text-amber-400 transition-colors duration-300" />
+                </div>
+                <span className="text-lg font-medium group-hover:text-amber-400 transition-colors duration-300">Gerar estatísticas</span>
+                <span className="text-sm text-gray-500 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  Visualize insights e métricas
+                </span>
               </button>
             </div>
           </div>

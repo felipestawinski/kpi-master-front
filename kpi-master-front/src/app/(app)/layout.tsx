@@ -5,34 +5,22 @@ import { useCallback, useEffect, useRef } from 'react';
 import Script from 'next/script';
 import { Inter, Roboto, Poppins } from 'next/font/google'
 
-const inter = Inter({ subsets: ['latin'] })
-
-const roboto = Roboto({ 
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '700']
-})
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700']
-})
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const inited = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const finisherOptions = {
-    count: 8,
-    size: { min: 200, max: 600, pulse: 0 },
-    speed: { x: { min: 0.08, max: 0.18 }, y: { min: 0.08, max: 0.25 } },
+    count: 5,
+    size: { min: 900, max: 1500, pulse: 0 },
+    speed: { x: { min: 0, max: 0.3 }, y: { min: 0, max: 0 } },
     colors: {
-      background: '#fe9a00',
-      particles: ['#fde68a', '#fcd34d', '#f59e0b', '#b45309'],
+      background: '#0f172a',
+      particles: ['#0f172a', '#252b3a', '#2d3847', '#3a2f28'],
     },
-    blending: 'overlay',
-    opacity: { center: 0.9, edge: 0.1 },
+    blending: 'lighten',
+    opacity: { center: 0.15, edge: 0.05 },
     skew: 0,
-    shapes: ['c', 's', 't'],
+    shapes: ['s'],
   } as const;
 
   const cleanupCanvases = () => {
