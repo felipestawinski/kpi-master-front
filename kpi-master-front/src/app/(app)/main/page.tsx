@@ -18,7 +18,7 @@ export default function MainPage() {
   useEffect(() => {
     // Stop any loading state immediately
     stopLoading();
-    
+
     const token = localStorage.getItem('token');
     if (!token) {
       alert("User not logged in")
@@ -38,11 +38,11 @@ export default function MainPage() {
       }
 
       setUsername(payload.sub || 'User');
-      
+
       // Check if user is new (hasn't completed onboarding)
       const onboardingCompleted = localStorage.getItem('onboardingCompleted');
       const isNewUser = localStorage.getItem('isNewUser');
-      
+
       if (isNewUser === 'true' && !onboardingCompleted) {
         setShowOnboarding(true);
         localStorage.removeItem('isNewUser'); // Clear the flag
@@ -76,13 +76,12 @@ export default function MainPage() {
   const [backgroundVisible, setBackgroundVisible] = useState(false);
 
   return (
-    <div className={`relative flex min-h-screen p-11 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden transition-all duration-1000 ease-out transform ${
-      backgroundVisible ? 'opacity-100' : 'opacity-0'
-    }`}>
+    <div className={`relative flex min-h-screen p-11 overflow-hidden transition-all duration-1000 ease-out transform ${backgroundVisible ? 'opacity-100' : 'opacity-0'
+      }`}>
       {/* Subtle animated background pattern */}
       {/* <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-900/10 via-transparent to-transparent"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent"></div> */}
-      
+
       {/* Onboarding Assistant */}
       {showOnboarding && (
         <OnboardingAssistant onDisable={() => setShowOnboarding(false)} />
@@ -90,9 +89,8 @@ export default function MainPage() {
 
       {/* Welcome message */}
       <div className="relative z-10 flex-1 flex flex-col">
-        <div className={`flex-initial space-y-5 transition-all duration-1000 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}>
+        <div className={`flex-initial space-y-5 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}>
           <h1 className="text-4xl font-light text-gray-400">Olá,</h1>
           <h1 className="text-6xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">{username}</h1>
           <p className="text-2xl mt-4 text-gray-400 font-light">Bem vindo ao seu painel.</p>
@@ -100,23 +98,21 @@ export default function MainPage() {
 
         {/* Introduction */}
         <div className='flex-1 flex items-center flex-col justify-center space-y-8'>
-          <p className={`text-xl text-gray-400 font-light transition-all duration-1000 delay-300 ease-out ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
+          <p className={`text-xl text-gray-400 font-light transition-all duration-1000 delay-300 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}>
             O que você gostaria de fazer?
           </p>
-          
-          <div className='flex flex-row gap-8 w-full max-w-5xl px-4'>  
-            <div 
-              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-              }`}
+
+          <div className='flex flex-row gap-8 w-full max-w-5xl px-4'>
+            <div
+              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/10 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                }`}
               style={{ transitionDelay: '500ms' }}
               onClick={() => handleNavigation('/search')}
             >
               <button className="p-10 text-gray-300 flex justify-center items-center flex-col w-full space-y-4 transition-all duration-300">
-                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-110">
-                  <MdOutlineManageSearch size={56} className="text-gray-400 group-hover:text-amber-400 transition-colors duration-300"/>
+                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-105">
+                  <MdOutlineManageSearch size={56} className="text-gray-400 group-hover:text-amber-400 transition-colors duration-300" />
                 </div>
                 <span className="text-lg font-medium group-hover:text-amber-400 transition-colors duration-300">Pesquisar documentos</span>
                 <span className="text-sm text-gray-500 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -124,17 +120,16 @@ export default function MainPage() {
                 </span>
               </button>
             </div>
-            
-            <div 
-              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-              }`}
+
+            <div
+              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/10 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                }`}
               style={{ transitionDelay: '700ms' }}
               onClick={() => handleNavigation('/upload')}
             >
               <button className="p-10 text-gray-300 flex justify-center items-center flex-col w-full space-y-4 transition-all duration-300">
-                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-110">
-                  <AiOutlineCloudUpload size={56} className="text-gray-400 group-hover:text-amber-400 transition-colors duration-300"/>
+                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-105">
+                  <AiOutlineCloudUpload size={56} className="text-gray-400 group-hover:text-amber-400 transition-colors duration-300" />
                 </div>
                 <span className="text-lg font-medium group-hover:text-amber-400 transition-colors duration-300">Carregar documentos</span>
                 <span className="text-sm text-gray-500 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -142,16 +137,15 @@ export default function MainPage() {
                 </span>
               </button>
             </div>
-            
-            <div 
-              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-              }`}
+
+            <div
+              className={`group flex-1 backdrop-blur-md rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-slate-700/90 hover:to-slate-800/90 border border-slate-700/50 hover:border-amber-500/50 cursor-pointer transition-all duration-500 ease-out hover:scale-[1.02] hover:shadow-lg hover:shadow-amber-500/10 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+                }`}
               style={{ transitionDelay: '900ms' }}
               onClick={() => handleNavigation('/statistics')}
             >
               <button className="p-10 text-gray-300 flex justify-center items-center flex-col w-full space-y-4 transition-all duration-300">
-                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-110">
+                <div className="p-4 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 transition-all duration-300 group-hover:scale-105">
                   <MdLeaderboard size={56} className="text-gray-400 group-hover:text-amber-400 transition-colors duration-300" />
                 </div>
                 <span className="text-lg font-medium group-hover:text-amber-400 transition-colors duration-300">Gerar estatísticas</span>

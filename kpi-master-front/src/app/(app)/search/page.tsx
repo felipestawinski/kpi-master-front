@@ -86,17 +86,25 @@ export function SearchPage() {
           ...(token ? { Authorization: `${token}` } : {}),
         },
         body: JSON.stringify({
-          username,
           searchType,
           searchTerm: searchTerm.trim(),
         }),
       });
 
-      const data: ApiFile[] = await res.json();
+      const data = await res.json();
 
       if (!res.ok) throw new Error('Search failed.');
 
-      setFiles(Array.isArray(data) ? data : []);
+      // Handle different response formats: direct array, or wrapped in { files: [...] }, { data: [...] }, etc.
+      let filesArray: ApiFile[] = [];
+      if (Array.isArray(data)) {
+        filesArray = data;
+      } else if (data && typeof data === 'object') {
+        // Check for common wrapper properties
+        filesArray = data.files || data.data || data.results || data.items || [];
+      }
+
+      setFiles(filesArray);
     } catch (err: any) {
       setError(err.message || 'Error searching files.');
     } finally {
@@ -305,7 +313,7 @@ export function SearchPage() {
         )}
 
         {/* Empty State */}
-        {!loading && !error && files.length === 0 && (
+        {!loading && !isSearching && !error && files.length === 0 && (
           <div className="backdrop-blur-xl bg-black/40 rounded-2xl p-12 shadow-2xl border border-white/30 text-center fade-in">
             <div className="mb-4 inline-block p-4 rounded-full bg-white/10 backdrop-blur-sm shadow-lg">
               <FileText className="w-12 h-12 text-white drop-shadow-lg" />
@@ -371,14 +379,14 @@ export function SearchPage() {
                         <span>Data</span>
                       </div>
                     </Th>
-                    
+
                     <Th>Arquivo</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
                   {files.map((f, index) => (
-                    <tr 
-                      key={f.id} 
+                    <tr
+                      key={f.id}
                       className="hover:bg-white/10 transition-all duration-200 group"
                       style={{
                         animation: `fadeIn 0.3s ease-out ${index * 0.05}s both`
@@ -429,9 +437,9 @@ export function SearchPage() {
               </button>
             </div>
             <div className="flex justify-center mb-6 bg-white/5 rounded-xl p-4 border border-white/10">
-              <img 
+              <img
                 src={`${analysisImage}`}
-                alt="Analysis Chart" 
+                alt="Analysis Chart"
                 className="max-w-full h-auto rounded-lg shadow-2xl"
               />
             </div>

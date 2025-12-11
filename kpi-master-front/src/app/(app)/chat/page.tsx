@@ -1,8 +1,10 @@
 'use client';
 
 import AuthGuard from '@/components/AuthGuard';
+import ChartGuidePopup from '@/components/ChartGuidePopup';
+import ReactMarkdown from 'react-markdown';
 import { useEffect, useState, useRef } from 'react';
-import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2 } from 'lucide-react';
+import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle } from 'lucide-react';
 
 type ApiFile = {
   id: number;
@@ -46,8 +48,12 @@ export function ChatPage() {
   const [selectionMode, setSelectionMode] = useState<SelectionMode>('files');
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
   const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
+  const [isChartGuideOpen, setIsChartGuideOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Track if chat is active (has messages) to expand the chat area
+  const isChatActive = messages.length > 0 || isLoading;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -84,7 +90,7 @@ export function ChatPage() {
   const clearChatHistory = () => {
     const identifier = getChatIdentifier();
     if (!identifier) return;
-    
+
     const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
     delete chatHistory[identifier];
     localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
@@ -221,7 +227,7 @@ export function ChatPage() {
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
-    
+
     // Check if we have any files to analyze
     const hasSelection = selectionMode === 'files' ? selectedFile : (selectedInstitution && selectedFileIds.size > 0);
     if (!hasSelection) return;
@@ -256,8 +262,8 @@ export function ChatPage() {
       }
 
       // Prepare file IDs for analysis
-      const fileIds = selectionMode === 'files' 
-        ? [selectedFile!.id] 
+      const fileIds = selectionMode === 'files'
+        ? [selectedFile!.id]
         : Array.from(selectedFileIds);
 
       const res = await fetch('http://localhost:8080/analysis-gen', {
@@ -415,194 +421,247 @@ export function ChatPage() {
         .chat-overlay {
           background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 100%);
         }
+        
+        /* Expanded chat mode */
+        .chat-expanded {
+          max-width: none !important;
+          padding-left: 2rem !important;
+          padding-right: 2rem !important;
+        }
+        
+        .selection-collapsed {
+          animation: collapseIn 0.3s ease-out;
+        }
+        
+        @keyframes collapseIn {
+          from {
+            opacity: 1;
+            max-height: 200px;
+          }
+          to {
+            opacity: 1;
+            max-height: 60px;
+          }
+        }
       `}</style>
 
-      <div className="mx-auto max-w-6xl flex-1 flex flex-col min-h-0">
+      <div className={`mx-auto flex-1 flex flex-col min-h-0 transition-all duration-500 ease-in-out ${isChatActive ? 'chat-expanded w-full' : 'max-w-6xl'}`}>
 
-        {/* Custom File Selection Dropdown */}
-        <div className="mb-6 flex-shrink-0" ref={dropdownRef}>
-          {/* Mode Selection Toggle */}
-          <div className="mb-4 flex items-center space-x-2">
-            <button
-              onClick={() => handleModeChange('files')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                selectionMode === 'files'
+        {/* Custom File Selection Dropdown - Collapses when chat is active */}
+        <div className={`flex-shrink-0 transition-all duration-500 ease-in-out ${isChatActive ? 'mb-3' : 'mb-6'}`} ref={dropdownRef}>
+          {/* Mode Selection Toggle - Hidden when chat is active */}
+          {!isChatActive && (
+            <div className="mb-4 flex items-center space-x-2">
+              <button
+                onClick={() => handleModeChange('files')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${selectionMode === 'files'
                   ? 'bg-amber-500 text-white shadow-lg'
                   : 'bg-black/30 text-white/70 border border-white/20 hover:bg-black/40'
-              }`}
-            >
-              Arquivos
-            </button>
-            <button
-              onClick={() => handleModeChange('institutions')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                selectionMode === 'institutions'
+                  }`}
+              >
+                Arquivos
+              </button>
+              <button
+                onClick={() => handleModeChange('institutions')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${selectionMode === 'institutions'
                   ? 'bg-amber-500 text-white shadow-lg'
                   : 'bg-black/30 text-white/70 border border-white/20 hover:bg-black/40'
-              }`}
-            >
-              Instituições
-            </button>
-          </div>
-
-          <label className="block text-sm font-medium text-white mb-2 drop-shadow-lg">
-            {selectionMode === 'files' ? 'Selecione um arquivo:' : 'Selecione uma instituição:'}
-          </label>
-          <div className="relative">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full p-4 rounded-xl bg-black/40 border border-white/30 text-white backdrop-blur-md hover:bg-black/50 transition-all duration-300 flex items-center justify-between group shadow-xl"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-amber-500/30 group-hover:bg-amber-500/40 transition-colors shadow-lg">
-                  <FileText className="w-5 h-5 text-amber-300" />
-                </div>
-                <div className="text-left">
-                  {selectionMode === 'files' ? (
-                    selectedFile ? (
-                      <>
-                        <div className="font-medium drop-shadow-md">{selectedFile.filename}</div>
-                        <div className="text-sm text-white/80 drop-shadow-md">{selectedFile.institution}</div>
-                      </>
-                    ) : (
-                      <div className="text-white/80 drop-shadow-md">Escolha um arquivo...</div>
-                    )
-                  ) : (
-                    selectedInstitution ? (
-                      <>
-                        <div className="font-medium drop-shadow-md">{selectedInstitution}</div>
-                        <div className="text-sm text-white/80 drop-shadow-md">
-                          {selectedFileIds.size} arquivo(s) selecionado(s)
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-white/80 drop-shadow-md">Escolha uma instituição...</div>
-                    )
-                  )}
-                </div>
-              </div>
-              <ChevronDown
-                className={`w-5 h-5 text-white/80 transition-transform duration-300 ${
-                  isDropdownOpen ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-
-            {isDropdownOpen && (
-              <div className="absolute z-10 w-full mt-2 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl border border-white/30 overflow-hidden dropdown-enter">
-                <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                  {selectionMode === 'files' ? (
-                    files.length === 0 ? (
-                      <div className="p-4 text-center text-gray-600 font-medium">
-                        Nenhum arquivo disponível
-                      </div>
-                    ) : (
-                      files.map((file, index) => (
-                        <button
-                          key={file.id}
-                          onClick={() => handleFileSelect(file)}
-                          className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 flex items-center space-x-3 group ${
-                            selectedFile?.id === file.id ? 'bg-amber-100' : ''
-                          } ${index !== 0 ? 'border-t border-gray-100' : ''}`}
-                        >
-                          <div className={`p-2 rounded-lg transition-colors ${
-                            selectedFile?.id === file.id
-                              ? 'bg-amber-500 text-white'
-                              : 'bg-gray-100 text-gray-600 group-hover:bg-amber-100'
-                          }`}>
-                            <FileText className="w-4 h-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 truncate">
-                              {file.filename}
-                            </div>
-                            <div className="text-sm text-gray-500 truncate">
-                              {file.institution} • {file.writer}
-                            </div>
-                          </div>
-                          {selectedFile?.id === file.id && (
-                            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
-                          )}
-                        </button>
-                      ))
-                    )
-                  ) : (
-                    getInstitutions().length === 0 ? (
-                      <div className="p-4 text-center text-gray-600 font-medium">
-                        Nenhuma instituição disponível
-                      </div>
-                    ) : (
-                      getInstitutions().map((institution, index) => (
-                        <div key={institution} className={index !== 0 ? 'border-t border-gray-100' : ''}>
-                          <button
-                            onClick={() => handleInstitutionSelect(institution)}
-                            className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 ${
-                              selectedInstitution === institution ? 'bg-amber-50' : ''
-                            }`}
-                          >
-                            <div className="font-medium text-gray-900">{institution}</div>
-                            <div className="text-sm text-gray-500">
-                              {getFilesForInstitution(institution).length} arquivo(s)
-                            </div>
-                          </button>
-                          
-                          {selectedInstitution === institution && (
-                            <div className="bg-gray-50 px-4 pb-4 space-y-2">
-                              <div className="text-xs text-gray-600 font-medium mb-2">
-                                Selecione os arquivos:
-                              </div>
-                              {getFilesForInstitution(institution).map((file) => (
-                                <label
-                                  key={file.id}
-                                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedFileIds.has(file.id)}
-                                    onChange={() => toggleFileSelection(file.id)}
-                                    className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium text-gray-900 truncate">
-                                      {file.filename}
-                                    </div>
-                                    <div className="text-xs text-gray-500 truncate">
-                                      {file.writer}
-                                    </div>
-                                  </div>
-                                </label>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {selectionMode === 'files' && selectedFile && (
-            <div className="mt-3 p-3 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-100 text-sm flex items-center space-x-2 message-enter shadow-lg backdrop-blur-sm">
-              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-lg"></div>
-              <span className="drop-shadow-md">Arquivo selecionado: <strong>{selectedFile.filename}</strong></span>
+                  }`}
+              >
+                Instituições
+              </button>
             </div>
           )}
 
-          {selectionMode === 'institutions' && selectedInstitution && (
-            <div className="mt-3 p-3 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-100 text-sm message-enter shadow-lg backdrop-blur-sm">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-lg"></div>
-                <span className="drop-shadow-md">
-                  Instituição: <strong>{selectedInstitution}</strong>
-                </span>
+          {/* Compact bar when chat is active */}
+          {isChatActive ? (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/20 backdrop-blur-md shadow-lg">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-amber-500/30 shadow-lg">
+                  <FileText className="w-4 h-4 text-amber-300" />
+                </div>
+                <div className="text-white text-sm">
+                  {selectionMode === 'files' && selectedFile && (
+                    <span><strong>{selectedFile.filename}</strong> • {selectedFile.institution}</span>
+                  )}
+                  {selectionMode === 'institutions' && selectedInstitution && (
+                    <span><strong>{selectedInstitution}</strong> • {selectedFileIds.size} arquivo(s)</span>
+                  )}
+                </div>
               </div>
-              <div className="text-xs text-amber-200/80 drop-shadow-md">
-                {selectedFileIds.size} de {getFilesForInstitution(selectedInstitution).length} arquivo(s) selecionado(s)
-              </div>
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  const identifier = getChatIdentifier();
+                  if (identifier) {
+                    const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+                    delete chatHistory[identifier];
+                    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+                  }
+                }}
+                className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 border border-white/10"
+              >
+                Trocar arquivo
+              </button>
             </div>
+          ) : (
+            <>
+              <label className="block text-sm font-medium text-white mb-2 drop-shadow-lg">
+                {selectionMode === 'files' ? 'Selecione um arquivo:' : 'Selecione uma instituição:'}
+              </label>
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full p-4 rounded-xl bg-black/40 border border-white/30 text-white backdrop-blur-md hover:bg-black/50 transition-all duration-300 flex items-center justify-between group shadow-xl"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-amber-500/30 group-hover:bg-amber-500/40 transition-colors shadow-lg">
+                      <FileText className="w-5 h-5 text-amber-300" />
+                    </div>
+                    <div className="text-left">
+                      {selectionMode === 'files' ? (
+                        selectedFile ? (
+                          <>
+                            <div className="font-medium drop-shadow-md">{selectedFile.filename}</div>
+                            <div className="text-sm text-white/80 drop-shadow-md">{selectedFile.institution}</div>
+                          </>
+                        ) : (
+                          <div className="text-white/80 drop-shadow-md">Escolha um arquivo...</div>
+                        )
+                      ) : (
+                        selectedInstitution ? (
+                          <>
+                            <div className="font-medium drop-shadow-md">{selectedInstitution}</div>
+                            <div className="text-sm text-white/80 drop-shadow-md">
+                              {selectedFileIds.size} arquivo(s) selecionado(s)
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-white/80 drop-shadow-md">Escolha uma instituição...</div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                  <ChevronDown
+                    className={`w-5 h-5 text-white/80 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''
+                      }`}
+                  />
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute z-10 w-full mt-2 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl border border-white/30 overflow-hidden dropdown-enter">
+                    <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                      {selectionMode === 'files' ? (
+                        files.length === 0 ? (
+                          <div className="p-4 text-center text-gray-600 font-medium">
+                            Nenhum arquivo disponível
+                          </div>
+                        ) : (
+                          files.map((file, index) => (
+                            <button
+                              key={file.id}
+                              onClick={() => handleFileSelect(file)}
+                              className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 flex items-center space-x-3 group ${selectedFile?.id === file.id ? 'bg-amber-100' : ''
+                                } ${index !== 0 ? 'border-t border-gray-100' : ''}`}
+                            >
+                              <div className={`p-2 rounded-lg transition-colors ${selectedFile?.id === file.id
+                                ? 'bg-amber-500 text-white'
+                                : 'bg-gray-100 text-gray-600 group-hover:bg-amber-100'
+                                }`}>
+                                <FileText className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 truncate">
+                                  {file.filename}
+                                </div>
+                                <div className="text-sm text-gray-500 truncate">
+                                  {file.institution} • {file.writer}
+                                </div>
+                              </div>
+                              {selectedFile?.id === file.id && (
+                                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
+                              )}
+                            </button>
+                          ))
+                        )
+                      ) : (
+                        getInstitutions().length === 0 ? (
+                          <div className="p-4 text-center text-gray-600 font-medium">
+                            Nenhuma instituição disponível
+                          </div>
+                        ) : (
+                          getInstitutions().map((institution, index) => (
+                            <div key={institution} className={index !== 0 ? 'border-t border-gray-100' : ''}>
+                              <button
+                                onClick={() => handleInstitutionSelect(institution)}
+                                className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 ${selectedInstitution === institution ? 'bg-amber-50' : ''
+                                  }`}
+                              >
+                                <div className="font-medium text-gray-900">{institution}</div>
+                                <div className="text-sm text-gray-500">
+                                  {getFilesForInstitution(institution).length} arquivo(s)
+                                </div>
+                              </button>
+
+                              {selectedInstitution === institution && (
+                                <div className="bg-gray-50 px-4 pb-4 space-y-2">
+                                  <div className="text-xs text-gray-600 font-medium mb-2">
+                                    Selecione os arquivos:
+                                  </div>
+                                  {getFilesForInstitution(institution).map((file) => (
+                                    <label
+                                      key={file.id}
+                                      className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedFileIds.has(file.id)}
+                                        onChange={() => toggleFileSelection(file.id)}
+                                        className="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium text-gray-900 truncate">
+                                          {file.filename}
+                                        </div>
+                                        <div className="text-xs text-gray-500 truncate">
+                                          {file.writer}
+                                        </div>
+                                      </div>
+                                    </label>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {selectionMode === 'files' && selectedFile && (
+                <div className="mt-3 p-3 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-100 text-sm flex items-center space-x-2 message-enter shadow-lg backdrop-blur-sm">
+                  <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-lg"></div>
+                  <span className="drop-shadow-md">Arquivo selecionado: <strong>{selectedFile.filename}</strong></span>
+                </div>
+              )}
+
+              {selectionMode === 'institutions' && selectedInstitution && (
+                <div className="mt-3 p-3 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-100 text-sm message-enter shadow-lg backdrop-blur-sm">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-lg"></div>
+                    <span className="drop-shadow-md">
+                      Instituição: <strong>{selectedInstitution}</strong>
+                    </span>
+                  </div>
+                  <div className="text-xs text-amber-200/80 drop-shadow-md">
+                    {selectedFileIds.size} de {getFilesForInstitution(selectedInstitution).length} arquivo(s) selecionado(s)
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -704,7 +763,7 @@ export function ChatPage() {
               </button>
             </div>
           )}
-          
+
           <div className="h-full overflow-y-auto p-6 space-y-4 custom-scrollbar">
             {messages.length === 0 ? (
               <div className="text-center text-white py-12">
@@ -712,7 +771,7 @@ export function ChatPage() {
                   <FileText className="w-8 h-8 drop-shadow-lg" />
                 </div>
                 <div className="text-lg drop-shadow-lg">
-                  {selectedFile 
+                  {selectedFile
                     ? `Faça uma pergunta sobre ${selectedFile.filename}!`
                     : 'Selecione um arquivo para começar a conversar'
                   }
@@ -728,25 +787,25 @@ export function ChatPage() {
                   }}
                 >
                   <div
-                    className={`max-w-[75%] p-4 rounded-2xl shadow-2xl transition-all duration-300 ${
-                      message.type === 'user'
-                        ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-br-sm'
-                        : 'bg-white/95 text-gray-900 rounded-bl-sm border border-white/30 backdrop-blur-sm'
-                    }`}
+                    className={`max-w-[75%] p-4 rounded-2xl shadow-2xl transition-all duration-300 ${message.type === 'user'
+                      ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-br-sm'
+                      : 'bg-white/95 text-gray-900 rounded-bl-sm border border-white/30 backdrop-blur-sm'
+                      }`}
                   >
-                    <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                    <div className="whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
                     {message.image && (
                       <div className="mt-3">
-                        <img 
+                        <img
                           src={message.image.startsWith('data:') ? message.image : `data:image/png;base64,${message.image}`}
                           alt="Generated visualization"
                           className="rounded-lg max-w-full h-auto border border-gray-200 shadow-lg"
                         />
                       </div>
                     )}
-                    <div className={`text-xs mt-2 ${
-                      message.type === 'user' ? 'text-white/90' : 'text-gray-600'
-                    }`}>
+                    <div className={`text-xs mt-2 ${message.type === 'user' ? 'text-white/90' : 'text-gray-600'
+                      }`}>
                       {message.timestamp.toLocaleTimeString()}
                     </div>
                   </div>
@@ -773,21 +832,30 @@ export function ChatPage() {
 
         {/* Message Input */}
         <div className="flex space-x-3 flex-shrink-0">
+          {/* Chart Guide Button */}
+          <button
+            onClick={() => setIsChartGuideOpen(true)}
+            className="px-4 py-3 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-amber-400/40 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-amber-500/20 flex items-center space-x-2 group"
+            title="Guia de Visualizações"
+          >
+            <HelpCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
+            <span className="text-sm font-medium hidden sm:inline">Guia de Gráficos</span>
+          </button>
           <div className="flex-1 relative">
             <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder={
-                selectionMode === 'files' 
+                selectionMode === 'files'
                   ? (selectedFile ? "Digite sua pergunta sobre o arquivo..." : "Selecione um arquivo primeiro")
-                  : (selectedInstitution && selectedFileIds.size > 0 
-                      ? "Digite sua pergunta sobre os arquivos selecionados..." 
-                      : "Selecione uma instituição e arquivos primeiro")
+                  : (selectedInstitution && selectedFileIds.size > 0
+                    ? "Digite sua pergunta sobre os arquivos selecionados..."
+                    : "Selecione uma instituição e arquivos primeiro")
               }
               disabled={
-                (selectionMode === 'files' && !selectedFile) || 
-                (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) || 
+                (selectionMode === 'files' && !selectedFile) ||
+                (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) ||
                 isLoading
               }
               className="w-full p-4 pr-12 rounded-xl bg-black/40 border border-white/30 text-white placeholder-white/70 backdrop-blur-md resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/70 focus:border-amber-500/70 transition-all duration-300 custom-scrollbar disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
@@ -797,9 +865,9 @@ export function ChatPage() {
           <button
             onClick={sendMessage}
             disabled={
-              !inputMessage.trim() || 
-              (selectionMode === 'files' && !selectedFile) || 
-              (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) || 
+              !inputMessage.trim() ||
+              (selectionMode === 'files' && !selectedFile) ||
+              (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) ||
               isLoading
             }
             className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-300 shadow-2xl hover:shadow-amber-500/50 flex items-center space-x-2 group"
@@ -809,6 +877,12 @@ export function ChatPage() {
           </button>
         </div>
       </div>
+
+      {/* Chart Guide Popup */}
+      <ChartGuidePopup
+        isOpen={isChartGuideOpen}
+        onClose={() => setIsChartGuideOpen(false)}
+      />
     </div>
   );
 }

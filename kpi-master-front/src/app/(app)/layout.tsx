@@ -15,7 +15,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     speed: { x: { min: 0, max: 0.3 }, y: { min: 0, max: 0 } },
     colors: {
       background: '#0f172a',
-      particles: ['#0f172a', '#252b3a', '#2d3847', '#3a2f28'],
+      particles: ['#35323aff', '#252b3a', '#0b0e13ff', '#706e6cff'],
     },
     blending: 'lighten',
     opacity: { center: 0.15, edge: 0.05 },
