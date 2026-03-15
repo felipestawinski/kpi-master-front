@@ -2,7 +2,7 @@
 
 import AuthGuard from '@/components/AuthGuard';
 import { useRef, useState } from 'react';
-import { Upload, File, X, Image as ImageIcon, Check } from 'lucide-react';
+import { Upload, File, X, Image as ImageIcon, Check, HelpCircle } from 'lucide-react';
 
 export function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -11,6 +11,7 @@ export function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [dataHealthCheck, setDataHealthCheck] = useState(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const onChooseClick = () => fileInputRef.current?.click();
@@ -65,6 +66,7 @@ export function UploadPage() {
       formData.append('file', file);
       formData.append('filename', filename.trim());
       formData.append('institution', institution.trim());
+      formData.append('dataHealthCheck', dataHealthCheck ? 'True' : 'False');
 
       const res = await fetch('http://localhost:8080/upload', {
         method: 'POST',
@@ -177,8 +179,8 @@ export function UploadPage() {
               onDragLeave={onDragLeave}
               className={[
                 'relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all duration-300',
-                isDragging 
-                  ? 'border-amber-400/70 bg-amber-500/20 scale-105' 
+                isDragging
+                  ? 'border-amber-400/70 bg-amber-500/20 scale-105'
                   : 'border-white/30 hover:border-amber-400/50 hover:bg-white/5',
               ].join(' ')}
               role="button"
@@ -299,6 +301,50 @@ export function UploadPage() {
             <p className="mt-3 text-xs text-white/50">
               <span className="text-red-400">*</span> Campo obrigatório
             </p>
+          </div>
+
+          {/* Data Health Check Toggle */}
+          <div className="backdrop-blur-xl bg-black/40 rounded-2xl shadow-2xl border border-white/30 p-6 slide-up">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold uppercase tracking-wider text-white/90 drop-shadow-lg">
+                  Data Health Check
+                </span>
+                <div className="relative group">
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 transition-all duration-200 cursor-help"
+                    aria-label="Informações sobre Data Health Check"
+                  >
+                    <HelpCircle className="w-3 h-3 text-white/70" />
+                  </button>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-2.5 bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl text-xs text-white/90 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-2xl z-50 pointer-events-none">
+                    <p>Verifica automaticamente a qualidade dos dados do arquivo antes da análise, identificando valores nulos, inconsistências e possíveis problemas que podem afetar os resultados.</p>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-black/90 border-r border-b border-white/20 rotate-45 -mt-1"></div>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDataHealthCheck(!dataHealthCheck)}
+                className={[
+                  'relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:ring-offset-2 focus:ring-offset-transparent',
+                  dataHealthCheck
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 shadow-lg shadow-amber-500/30'
+                    : 'bg-white/20',
+                ].join(' ')}
+                role="switch"
+                aria-checked={dataHealthCheck}
+                aria-label="Ativar Data Health Check"
+              >
+                <span
+                  className={[
+                    'inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300',
+                    dataHealthCheck ? 'translate-x-6' : 'translate-x-1',
+                  ].join(' ')}
+                />
+              </button>
+            </div>
           </div>
 
           {/* Success Message */}

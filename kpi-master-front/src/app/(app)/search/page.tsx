@@ -1,8 +1,8 @@
 'use client';
 import { FaRegCalendar } from "react-icons/fa";
 import AuthGuard from '@/components/AuthGuard';
-import { useEffect, useState } from 'react';
-import { Search as SearchIcon, FileText, Building2, User, X, Download, Save } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Search as SearchIcon, FileText, Building2, User, X, Download, Save, ChevronDown } from 'lucide-react';
 
 type ApiFile = {
   id: number;
@@ -13,6 +13,18 @@ type ApiFile = {
   fileAddress: string;
 };
 
+type SearchTypeOption = {
+  value: 'filename' | 'institution' | 'writer';
+  label: string;
+  icon: React.ReactNode;
+};
+
+const SEARCH_TYPE_OPTIONS: SearchTypeOption[] = [
+  { value: 'filename', label: 'Nome', icon: <FileText className="w-4 h-4" /> },
+  { value: 'institution', label: 'Instituição', icon: <Building2 className="w-4 h-4" /> },
+  { value: 'writer', label: 'Autor', icon: <User className="w-4 h-4" /> },
+];
+
 export function SearchPage() {
   const [files, setFiles] = useState<ApiFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,10 +32,13 @@ export function SearchPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState<'filename' | 'institution' | 'writer'>('filename');
   const [isSearching, setIsSearching] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const [username, setUsername] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [analysisImage, setAnalysisImage] = useState<string | null>(null);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -39,6 +54,17 @@ export function SearchPage() {
       setUsername(null);
       setToken(null);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const fetchFiles = async () => {
@@ -171,6 +197,8 @@ export function SearchPage() {
     }
   };
 
+  const selectedOption = SEARCH_TYPE_OPTIONS.find(o => o.value === searchType)!;
+
   return (
     <div className="p-6 min-h-screen">
       <style jsx global>{`
@@ -205,6 +233,17 @@ export function SearchPage() {
           }
         }
 
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         @keyframes slideUp {
           from {
             opacity: 0;
@@ -223,6 +262,10 @@ export function SearchPage() {
         .slide-up {
           animation: slideUp 0.4s ease-out;
         }
+
+        .dropdown-enter {
+          animation: slideIn 0.2s ease-out;
+        }
       `}</style>
 
       <div className="mx-auto max-w-7xl">
@@ -238,22 +281,61 @@ export function SearchPage() {
         </div>
 
         {/* Search Section */}
-        <div className="mb-6 backdrop-blur-xl bg-black/40 rounded-2xl p-6 shadow-2xl border border-white/30 slide-up">
+        <div className="mb-6 backdrop-blur-xl bg-black/40 rounded-2xl p-6 shadow-2xl border border-white/30 slide-up overflow-visible relative z-20">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-white mb-2 drop-shadow-lg flex items-center space-x-2">
-                {getSearchIcon()}
-                <span>Buscar por</span>
+            <div className="flex-1" ref={dropdownRef}>
+              <label className="block text-sm font-medium text-white mb-2 drop-shadow-lg">
+                Buscar por
               </label>
-              <select
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value as any)}
-                className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/70 focus:border-amber-500/70 transition-all backdrop-blur-sm shadow-lg cursor-pointer hover:bg-black/40"
-              >
-                <option value="filename" className="bg-gray-900">📄 Nome do Arquivo</option>
-                <option value="institution" className="bg-gray-900">🏢 Instituição</option>
-                <option value="writer" className="bg-gray-900">👤 Autor</option>
-              </select>
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full p-4 rounded-xl bg-black/40 border border-white/30 text-white backdrop-blur-md hover:bg-black/50 transition-all duration-300 flex items-center justify-between group shadow-xl"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-amber-500/30 group-hover:bg-amber-500/40 transition-colors shadow-lg">
+                      {selectedOption.icon}
+                    </div>
+                    <div className="font-medium drop-shadow-md">{selectedOption.label}</div>
+                  </div>
+                  <ChevronDown
+                    className={`w-5 h-5 text-white/80 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-2 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl border border-white/30 overflow-hidden dropdown-enter">
+                    <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                      {SEARCH_TYPE_OPTIONS.map((option, index) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setSearchType(option.value);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 flex items-center space-x-3 group ${searchType === option.value ? 'bg-amber-100' : ''
+                            } ${index !== 0 ? 'border-t border-gray-100' : ''}`}
+                        >
+                          <div className={`p-2 rounded-lg transition-colors ${searchType === option.value
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-gray-100 text-gray-600 group-hover:bg-amber-100'
+                            }`}>
+                            {option.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 truncate">
+                              {option.label}
+                            </div>
+                          </div>
+                          {searchType === option.value && (
+                            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex-[2]">
               <label className="block text-sm font-medium text-white mb-2 drop-shadow-lg">
