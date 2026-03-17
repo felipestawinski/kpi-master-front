@@ -74,8 +74,18 @@ export function UploadPage() {
         body: formData,
       });
 
-      const text = await res.text();
-      if (!res.ok) throw new Error(text || 'Upload failed');
+      const responseText = await res.text();
+      if (!res.ok) throw new Error(responseText || 'Upload failed');
+
+      // Parse JSON response and log health check result
+      try {
+        const data = JSON.parse(responseText);
+        if (data.dataHealthCheck) {
+          console.log('Data Health Check Result:', data.dataHealthCheck);
+        }
+      } catch {
+        // Response wasn't JSON, ignore
+      }
 
       setUploadSuccess(true);
       setTimeout(() => {
