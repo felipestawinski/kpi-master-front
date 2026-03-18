@@ -2,7 +2,7 @@
 
 import AuthGuard from '@/components/AuthGuard';
 import { useRef, useState } from 'react';
-import { Upload, File, X, Image as ImageIcon, Check, HelpCircle } from 'lucide-react';
+import { Upload, File, X, Image as ImageIcon, Check, HelpCircle, ShieldCheck } from 'lucide-react';
 
 export function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -12,6 +12,8 @@ export function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [dataHealthCheck, setDataHealthCheck] = useState(true);
+  const [healthCheckResult, setHealthCheckResult] = useState<string | null>(null);
+  const [showHealthCheck, setShowHealthCheck] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const onChooseClick = () => fileInputRef.current?.click();
@@ -77,11 +79,12 @@ export function UploadPage() {
       const responseText = await res.text();
       if (!res.ok) throw new Error(responseText || 'Upload failed');
 
-      // Parse JSON response and log health check result
+      // Parse JSON response and show health check result in popup
       try {
         const data = JSON.parse(responseText);
         if (data.dataHealthCheck) {
-          console.log('Data Health Check Result:', data.dataHealthCheck);
+          setHealthCheckResult(data.dataHealthCheck);
+          setShowHealthCheck(true);
         }
       } catch {
         // Response wasn't JSON, ignore
@@ -114,6 +117,84 @@ export function UploadPage() {
 
   return (
     <div className="p-6 max-h-screen overflow-y-auto">
+      {/* Data Health Check Popup */}
+      {showHealthCheck && healthCheckResult && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setShowHealthCheck(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl backdrop-blur-xl bg-black/70 rounded-2xl shadow-2xl border border-white/30 fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 shadow-lg shadow-amber-500/30">
+                  <ShieldCheck className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-lg font-semibold text-white drop-shadow-lg">
+                  Data Health Check
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHealthCheck(false)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all duration-200"
+                aria-label="Fechar"
+              >
+                <X className="w-4 h-4 text-white/80" />
+              </button>
+            </div>
+
+            {/* Success Banner */}
+            <div className="mx-6 mt-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-green-500/20 border border-green-400/40">
+              <div className="p-1.5 rounded-full bg-green-500/30">
+                <Check className="w-4 h-4 text-green-300" />
+              </div>
+              <span className="text-sm font-semibold text-green-300 drop-shadow-lg">
+                Arquivo enviado com sucesso!
+              </span>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              <pre className="text-sm text-white/90 whitespace-pre-wrap break-words font-mono leading-relaxed">
+                {healthCheckResult}
+              </pre>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-white/10 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowHealthCheck(false)}
+                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(245, 158, 11, 0.4);
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(245, 158, 11, 0.6);
+        }
+      `}</style>
       <style jsx global>{`
         @keyframes fadeIn {
           from {
