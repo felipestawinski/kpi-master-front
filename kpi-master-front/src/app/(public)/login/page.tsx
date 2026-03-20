@@ -8,10 +8,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsRedirecting(true);
+    setLoginError(null);
 
     try {
       const response = await fetch('http://localhost:8080/login', {
@@ -32,15 +35,14 @@ export default function LoginPage() {
       localStorage.setItem('profileImageUrl', payload.profileImageUrl || '');
       localStorage.setItem('email', payload.email);
       
-      console.log("result text:" + resultText);
-      alert('Login realizado com sucesso!');
+      setShowSuccess(true);
 
       setTimeout(() => {
       router.push('/main');
-      }, 1000);
+      }, 1500);
 
     } catch (error: any) {
-      alert('Falha no login: ' + error.message);
+      setLoginError(error.message || 'Erro desconhecido');
       setIsRedirecting(false);
     }
   };
@@ -209,8 +211,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Loading overlay */}
-      {isRedirecting && (
+      {/* Loading overlay — only while redirecting and not yet showing success */}
+      {isRedirecting && !showSuccess && (
         <div className="absolute inset-0 bg-[#1e2938]/60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-2xl shadow-2xl">
             <div className="flex flex-col items-center gap-4">
@@ -223,6 +225,79 @@ export default function LoginPage() {
           </div>
         </div>
       )}
+
+      {/* Success popup */}
+      {showSuccess && (
+        <div className="absolute inset-0 bg-[#1e2938]/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white p-10 rounded-2xl shadow-2xl flex flex-col items-center gap-5"
+               style={{ animation: 'popupFadeIn 0.3s ease-out' }}>
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center"
+                 style={{ animation: 'popupScale 0.4s ease-out' }}>
+              <svg className="w-9 h-9 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-[#1e2938] mb-1">Login realizado com sucesso!</h3>
+              <p className="text-gray-500 text-sm">Redirecionando para o painel...</p>
+            </div>
+            <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
+              <div className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"
+                   style={{ animation: 'progressBar 1.5s ease-in-out forwards' }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error popup */}
+      {loginError && (
+        <div className="absolute inset-0 bg-[#1e2938]/60 backdrop-blur-sm flex items-center justify-center z-50"
+             onClick={() => setLoginError(null)}>
+          <div className="bg-white p-10 rounded-2xl shadow-2xl flex flex-col items-center gap-5 max-w-sm mx-4"
+               style={{ animation: 'popupFadeIn 0.3s ease-out' }}
+               onClick={(e) => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center"
+                 style={{ animation: 'popupScale 0.4s ease-out' }}>
+              <svg className="w-9 h-9 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-[#1e2938] mb-1">Falha no login</h3>
+              <p className="text-gray-500 text-sm">{loginError}</p>
+            </div>
+            <button
+              onClick={() => setLoginError(null)}
+              className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 
+                       text-white font-medium rounded-xl 
+                       hover:from-orange-600 hover:to-orange-700 
+                       focus:outline-none focus:ring-4 focus:ring-orange-500/20
+                       transform hover:scale-[1.02] active:scale-[0.98]
+                       transition-all duration-200
+                       shadow-lg shadow-orange-500/25"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Popup animations */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes popupFadeIn {
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes popupScale {
+          from { transform: scale(0); }
+          60% { transform: scale(1.15); }
+          to { transform: scale(1); }
+        }
+        @keyframes progressBar {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      ` }} />
     </div>
   );
 }

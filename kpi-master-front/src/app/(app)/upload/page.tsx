@@ -10,6 +10,7 @@ export function UploadPage() {
   const [institution, setInstitution] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [dataHealthCheck, setDataHealthCheck] = useState(true);
   const [healthCheckResult, setHealthCheckResult] = useState<string | null>(null);
@@ -64,13 +65,50 @@ export function UploadPage() {
       setIsUploading(true);
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+      if (dataHealthCheck) {
+        // Phase 1: Run health check only (no IPFS upload yet)
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('filename', filename.trim());
+
+        const res = await fetch('http://localhost:8080/health-check', {
+          method: 'POST',
+          headers: token ? { Authorization: token } : {},
+          body: formData,
+        });
+
+        const responseText = await res.text();
+        if (!res.ok) throw new Error(responseText || 'Health check failed');
+
+        const data = JSON.parse(responseText);
+        if (data.dataHealthCheck) {
+          setHealthCheckResult(data.dataHealthCheck);
+          setShowHealthCheck(true);
+        }
+      } else {
+        // No health check — upload directly as raw
+        await handleConfirmedUpload('raw');
+      }
+    } catch (err: any) {
+      alert('Erro: ' + err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleConfirmedUpload = async (mode: 'raw' | 'cleaned') => {
+    if (!file) return;
+    try {
+      setIsConfirming(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
       const formData = new FormData();
       formData.append('file', file);
       formData.append('filename', filename.trim());
       formData.append('institution', institution.trim());
-      formData.append('dataHealthCheck', dataHealthCheck ? 'True' : 'False');
+      formData.append('mode', mode);
 
-      const res = await fetch('http://localhost:8080/upload', {
+      const res = await fetch('http://localhost:8080/upload-confirmed', {
         method: 'POST',
         headers: token ? { Authorization: token } : {},
         body: formData,
@@ -79,17 +117,7 @@ export function UploadPage() {
       const responseText = await res.text();
       if (!res.ok) throw new Error(responseText || 'Upload failed');
 
-      // Parse JSON response and show health check result in popup
-      try {
-        const data = JSON.parse(responseText);
-        if (data.dataHealthCheck) {
-          setHealthCheckResult(data.dataHealthCheck);
-          setShowHealthCheck(true);
-        }
-      } catch {
-        // Response wasn't JSON, ignore
-      }
-
+      setShowHealthCheck(false);
       setUploadSuccess(true);
       setTimeout(() => {
         setFile(null);
@@ -99,7 +127,7 @@ export function UploadPage() {
     } catch (err: any) {
       alert('Erro: ' + err.message);
     } finally {
-      setIsUploading(false);
+      setIsConfirming(false);
     }
   };
 
@@ -122,7 +150,6 @@ export function UploadPage() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(8px)' }}
-          onClick={() => setShowHealthCheck(false)}
         >
           <div
             className="relative w-full max-w-2xl backdrop-blur-xl bg-black/70 rounded-2xl shadow-2xl border border-white/30 fade-in"
@@ -143,36 +170,60 @@ export function UploadPage() {
                 onClick={() => setShowHealthCheck(false)}
                 className="p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 transition-all duration-200"
                 aria-label="Fechar"
+                disabled={isConfirming}
               >
                 <X className="w-4 h-4 text-white/80" />
               </button>
             </div>
 
-            {/* Success Banner */}
-            <div className="mx-6 mt-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-green-500/20 border border-green-400/40">
-              <div className="p-1.5 rounded-full bg-green-500/30">
-                <Check className="w-4 h-4 text-green-300" />
+            {/* Info Banner */}
+            <div className="mx-6 mt-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/20 border border-amber-400/40">
+              <div className="p-1.5 rounded-full bg-amber-500/30">
+                <ShieldCheck className="w-4 h-4 text-amber-300" />
               </div>
-              <span className="text-sm font-semibold text-green-300 drop-shadow-lg">
-                Arquivo enviado com sucesso!
+              <span className="text-sm font-semibold text-amber-300 drop-shadow-lg">
+                Revise o relatório e escolha como enviar o arquivo.
               </span>
             </div>
 
             {/* Scrollable Content */}
-            <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div className="p-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
               <pre className="text-sm text-white/90 whitespace-pre-wrap break-words font-mono leading-relaxed">
                 {healthCheckResult}
               </pre>
             </div>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-white/10 flex justify-end">
+            {/* Footer with two action buttons */}
+            <div className="p-4 border-t border-white/10 flex flex-col sm:flex-row justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setShowHealthCheck(false)}
-                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => handleConfirmedUpload('raw')}
+                disabled={isConfirming}
+                className="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/20 backdrop-blur-sm transition-all duration-300 flex items-center justify-center space-x-2"
               >
-                Fechar
+                {isConfirming ? (
+                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    <span>Enviar Arquivo Original</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConfirmedUpload('cleaned')}
+                disabled={isConfirming}
+                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
+              >
+                {isConfirming ? (
+                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Enviar Arquivo Limpo</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
