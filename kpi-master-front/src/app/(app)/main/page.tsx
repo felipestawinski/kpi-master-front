@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { AiOutlineCloudUpload } from "react-icons/ai";
 import { MdLeaderboard } from "react-icons/md";
 import { MdOutlineManageSearch } from "react-icons/md";
-import OnboardingAssistant from '@/components/OnboardingAssistant';
 import { useLoading } from '@/components/hooks/useLoading';
 
 export default function MainPage() {
@@ -13,7 +12,6 @@ export default function MainPage() {
   const { stopLoading } = useLoading();
   const [username, setUsername] = useState('');
   const [isVisible, setIsVisible] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     // Stop any loading state immediately
@@ -38,15 +36,6 @@ export default function MainPage() {
       }
 
       setUsername(payload.sub || 'User');
-
-      // Check if user is new (hasn't completed onboarding)
-      const onboardingCompleted = localStorage.getItem('onboardingCompleted');
-      const isNewUser = localStorage.getItem('isNewUser');
-
-      if (isNewUser === 'true' && !onboardingCompleted) {
-        setShowOnboarding(true);
-        localStorage.removeItem('isNewUser'); // Clear the flag
-      }
     } catch (error) {
       console.error('Invalid token');
       localStorage.removeItem('token');
@@ -81,11 +70,6 @@ export default function MainPage() {
       {/* Subtle animated background pattern */}
       {/* <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-900/10 via-transparent to-transparent"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent"></div> */}
-
-      {/* Onboarding Assistant */}
-      {showOnboarding && (
-        <OnboardingAssistant onDisable={() => setShowOnboarding(false)} />
-      )}
 
       {/* Welcome message */}
       <div className="relative z-10 flex-1 flex flex-col">

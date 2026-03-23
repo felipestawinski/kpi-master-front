@@ -1,13 +1,14 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
-import { useCallback, useEffect, useRef } from 'react';
+import OnboardingAssistant from '@/components/OnboardingAssistant';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
-import { Inter, Roboto, Poppins } from 'next/font/google'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const inited = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const finisherOptions = {
     count: 5,
@@ -50,6 +51,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
   }, [initFinisher]);
 
+  // Check if the onboarding should be shown (new user who hasn't completed it)
+  useEffect(() => {
+    const onboardingCompleted = localStorage.getItem('onboardingCompleted');
+    const isNewUser = localStorage.getItem('isNewUser');
+
+    if (isNewUser === 'true' && !onboardingCompleted) {
+      setShowOnboarding(true);
+      localStorage.removeItem('isNewUser');
+    }
+  }, []);
+
   return (
     <div 
       ref={containerRef}
@@ -75,7 +87,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       `}</style>
 
       <Sidebar />
-      
+
+      {/* Onboarding Assistant — rendered at layout level so it persists across pages */}
+      {showOnboarding && (
+        <OnboardingAssistant onDisable={() => setShowOnboarding(false)} />
+      )}
 
       {/* Main content area */}
       <main className="relative z-10 flex-1">
@@ -84,3 +100,4 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

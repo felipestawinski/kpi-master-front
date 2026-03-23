@@ -38,8 +38,8 @@ export default function Sidebar() {
   const navButtonClass = (route: string) => `
     group relative p-3 rounded-lg flex items-center justify-start space-x-3 h-12
     transition-all duration-200 ease-in-out
-    ${isActive(route) 
-      ? 'bg-white/10 text-white shadow-lg' 
+    ${isActive(route)
+      ? 'bg-white/10 text-white shadow-lg'
       : 'bg-black/30 hover:bg-black/40 hover:translate-x-1'
     }
   `;
@@ -58,34 +58,37 @@ export default function Sidebar() {
             <span className={isActive('/main') ? 'font-medium' : ''}>Página Inicial</span>
             {isActive('/main') && <div className="absolute left-0 w-1 h-8 bg-white rounded-r-full" />}
           </button>
-          
+
           <button
             onClick={() => handleNavigation('/search')}
             className={navButtonClass('/search')}
+            data-onboarding-id="search"
           >
             <MdOutlineManageSearch size={20} className={isActive('/search') ? 'text-white' : 'text-gray-300 group-hover:text-white transition-colors'} />
             <span className={isActive('/search') ? 'font-medium' : ''}>Pesquisar</span>
             {isActive('/search') && <div className="absolute left-0 w-1 h-8 bg-white rounded-r-full" />}
           </button>
-          
+
           <button
             onClick={() => handleNavigation('/upload')}
             className={navButtonClass('/upload')}
+            data-onboarding-id="upload"
           >
             <IoDocumentSharp size={20} className={isActive('/upload') ? 'text-white' : 'text-gray-300 group-hover:text-white transition-colors'} />
             <span className={isActive('/upload') ? 'font-medium' : ''}>Enviar documentos</span>
             {isActive('/upload') && <div className="absolute left-0 w-1 h-8 bg-white rounded-r-full" />}
           </button>
-          
+
           <button
             onClick={() => handleNavigation('/users')}
             className={navButtonClass('/users')}
+            data-onboarding-id="users"
           >
             <PiUsersFill size={20} className={isActive('/users') ? 'text-white' : 'text-gray-300 group-hover:text-white transition-colors'} />
             <span className={isActive('/users') ? 'font-medium' : ''}>Gerenciar usuários</span>
             {isActive('/users') && <div className="absolute left-0 w-1 h-8 bg-white rounded-r-full" />}
           </button>
-          
+
           <button
             onClick={() => handleNavigation('/statistics')}
             className={navButtonClass('/statistics')}
@@ -98,6 +101,7 @@ export default function Sidebar() {
           <button
             onClick={() => handleNavigation('/chat')}
             className={navButtonClass('/chat')}
+            data-onboarding-id="chat"
           >
             <IoChatbox size={20} className={isActive('/chat') ? 'text-white' : 'text-gray-300 group-hover:text-white transition-colors'} />
             <span className={isActive('/chat') ? 'font-medium' : ''}>Chat</span>
@@ -125,7 +129,7 @@ export default function Sidebar() {
             <CgProfile size={20} className={isActive('/profile') ? 'text-white' : 'text-gray-300 group-hover:text-white transition-colors'} />
             <span className={isActive('/profile') ? 'font-medium' : ''}>Perfil</span>
             {isActive('/profile') && <div className="absolute left-0 w-1 h-8 bg-white rounded-r-full" />}
-          </button> 
+          </button>
         </div>
       </div>
     </>
