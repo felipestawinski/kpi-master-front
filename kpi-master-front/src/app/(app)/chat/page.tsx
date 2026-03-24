@@ -4,7 +4,7 @@ import AuthGuard from '@/components/AuthGuard';
 import ChartGuidePopup from '@/components/ChartGuidePopup';
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState, useRef } from 'react';
-import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle } from 'lucide-react';
+import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, BarChart3, Sparkles } from 'lucide-react';
 
 type ApiFile = {
   id: number;
@@ -225,23 +225,29 @@ export function ChatPage() {
     }
   }, [username]);
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+  const sendMessage = async (generateChart: boolean = false, chartRecommendation: boolean = false) => {
+    // Chart recommendation doesn't require text input
+    if (!chartRecommendation && (!inputMessage.trim() || isLoading)) return;
+    if (chartRecommendation && isLoading) return;
 
     // Check if we have any files to analyze
     const hasSelection = selectionMode === 'files' ? selectedFile : (selectedInstitution && selectedFileIds.size > 0);
     if (!hasSelection) return;
 
+    const displayPrompt = chartRecommendation
+      ? 'Qual gráfico de visualização é adequado para esse arquivo?'
+      : inputMessage;
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
-      content: inputMessage,
+      content: displayPrompt,
       timestamp: new Date(),
     };
 
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    const currentPrompt = inputMessage;
+    const currentPrompt = chartRecommendation ? displayPrompt : inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
@@ -275,6 +281,8 @@ export function ChatPage() {
         body: JSON.stringify({
           fileIds: fileIds,
           prompt: currentPrompt,
+          generateChart: generateChart,
+          chartRecommendation: chartRecommendation,
         }),
       });
 
@@ -839,7 +847,21 @@ export function ChatPage() {
             title="Guia de Visualizações"
           >
             <HelpCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
-            <span className="text-sm font-medium hidden sm:inline">Guia de Gráficos</span>
+            <span className="text-sm font-medium hidden sm:inline">Guia</span>
+          </button>
+          {/* Chart Recommendation Button */}
+          <button
+            onClick={() => sendMessage(false, true)}
+            disabled={
+              (selectionMode === 'files' && !selectedFile) ||
+              (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) ||
+              isLoading
+            }
+            className="px-4 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-300 shadow-xl hover:shadow-violet-500/40 flex items-center space-x-2 group"
+            title="Descubra qual gráfico é ideal para seus dados"
+          >
+            <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium hidden md:inline">Qual Gráfico?</span>
           </button>
           <div className="flex-1 relative">
             <textarea
@@ -862,8 +884,24 @@ export function ChatPage() {
               rows={3}
             />
           </div>
+          {/* Generate Chart Button */}
           <button
-            onClick={sendMessage}
+            onClick={() => sendMessage(true)}
+            disabled={
+              !inputMessage.trim() ||
+              (selectionMode === 'files' && !selectedFile) ||
+              (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) ||
+              isLoading
+            }
+            className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl transition-all duration-300 shadow-xl hover:shadow-emerald-500/40 flex items-center space-x-2 group"
+            title="Gerar gráfico junto com a resposta"
+          >
+            <BarChart3 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-medium hidden md:inline">Gerar Gráfico</span>
+          </button>
+          {/* Send (text-only) Button */}
+          <button
+            onClick={() => sendMessage()}
             disabled={
               !inputMessage.trim() ||
               (selectionMode === 'files' && !selectedFile) ||
