@@ -33,6 +33,22 @@ const DEFAULT_TEMPLATE_QUESTIONS = [
   "What are the data quality issues, if any?"
 ];
 
+const AVAILABLE_MODELS = [
+  "gpt-5.4-pro",
+  "gpt-5.4",
+  "gpt-5.2-pro",
+  "gpt-5.2",
+  "gpt-5",
+  "gpt-5-mini",
+  "gpt-5-nano",
+  "gpt-4.1",
+  "gpt-4.1-mini",
+  "gpt-4.1-nano",
+  "gpt-4o",
+];
+
+const DEFAULT_MODEL = "gpt-5-mini";
+
 export function ChatPage() {
   const [files, setFiles] = useState<ApiFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<ApiFile | null>(null);
@@ -49,8 +65,11 @@ export function ChatPage() {
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
   const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
   const [isChartGuideOpen, setIsChartGuideOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
 
   // Track if chat is active (has messages) to expand the chat area
   const isChatActive = messages.length > 0 || isLoading;
@@ -191,6 +210,9 @@ export function ChatPage() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target as Node)) {
+        setIsModelDropdownOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -283,6 +305,7 @@ export function ChatPage() {
           prompt: currentPrompt,
           generateChart: generateChart,
           chartRecommendation: chartRecommendation,
+          model: selectedModel,
         }),
       });
 
@@ -456,28 +479,66 @@ export function ChatPage() {
       <div className={`mx-auto flex-1 flex flex-col min-h-0 transition-all duration-500 ease-in-out ${isChatActive ? 'chat-expanded w-full' : 'max-w-6xl'}`}>
 
         {/* Custom File Selection Dropdown - Collapses when chat is active */}
-        <div className={`flex-shrink-0 transition-all duration-500 ease-in-out ${isChatActive ? 'mb-3' : 'mb-6'}`} ref={dropdownRef}>
+        <div className={`flex-shrink-0 relative z-20 transition-all duration-500 ease-in-out ${isChatActive ? 'mb-3' : 'mb-6'}`} ref={dropdownRef}>
           {/* Mode Selection Toggle - Hidden when chat is active */}
           {!isChatActive && (
-            <div className="mb-4 flex items-center space-x-2">
-              <button
-                onClick={() => handleModeChange('files')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${selectionMode === 'files'
-                  ? 'bg-amber-500 text-white shadow-lg'
-                  : 'bg-black/30 text-white/70 border border-white/20 hover:bg-black/40'
-                  }`}
-              >
-                Arquivos
-              </button>
-              <button
-                onClick={() => handleModeChange('institutions')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${selectionMode === 'institutions'
-                  ? 'bg-amber-500 text-white shadow-lg'
-                  : 'bg-black/30 text-white/70 border border-white/20 hover:bg-black/40'
-                  }`}
-              >
-                Instituições
-              </button>
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleModeChange('files')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${selectionMode === 'files'
+                    ? 'bg-amber-500 text-white shadow-lg'
+                    : 'bg-black/30 text-white/70 border border-white/20 hover:bg-black/40'
+                    }`}
+                >
+                  Arquivos
+                </button>
+                <button
+                  onClick={() => handleModeChange('institutions')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${selectionMode === 'institutions'
+                    ? 'bg-amber-500 text-white shadow-lg'
+                    : 'bg-black/30 text-white/70 border border-white/20 hover:bg-black/40'
+                    }`}
+                >
+                  Instituições
+                </button>
+              </div>
+
+              {/* Model Selector Dropdown */}
+              <div className="relative" ref={modelDropdownRef}>
+                <button
+                  onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                  className="px-4 py-2 rounded-lg bg-black/40 border border-white/30 text-white backdrop-blur-md hover:bg-black/50 transition-all duration-300 flex items-center space-x-2 group shadow-xl"
+                >
+                  <span className="text-sm font-medium text-white/80">Modelo:</span>
+                  <span className="text-sm font-medium text-amber-300">{selectedModel}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-white/80 transition-transform duration-300 ${isModelDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {isModelDropdownOpen && (
+                  <div className="absolute z-10 right-0 mt-2 w-56 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl border border-white/30 overflow-hidden dropdown-enter">
+                    <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                      {AVAILABLE_MODELS.map((model, index) => (
+                        <button
+                          key={model}
+                          onClick={() => {
+                            setSelectedModel(model);
+                            setIsModelDropdownOpen(false);
+                          }}
+                          className={`w-full p-3 text-left hover:bg-amber-50 transition-all duration-200 flex items-center justify-between group ${selectedModel === model ? 'bg-amber-100' : ''} ${index !== 0 ? 'border-t border-gray-100' : ''}`}
+                        >
+                          <span className="font-medium text-gray-900 text-sm">{model}</span>
+                          {selectedModel === model && (
+                            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -497,20 +558,55 @@ export function ChatPage() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setMessages([]);
-                  const identifier = getChatIdentifier();
-                  if (identifier) {
-                    const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-                    delete chatHistory[identifier];
-                    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-                  }
-                }}
-                className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 border border-white/10"
-              >
-                Trocar arquivo
-              </button>
+              <div className="flex items-center space-x-3">
+                {/* Compact Model Selector */}
+                <div className="relative" ref={modelDropdownRef}>
+                  <button
+                    onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 border border-white/10 flex items-center space-x-1.5"
+                  >
+                    <span className="text-white/60">Modelo:</span>
+                    <span className="text-amber-300 font-medium">{selectedModel}</span>
+                    <ChevronDown className={`w-3 h-3 text-white/60 transition-transform duration-300 ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isModelDropdownOpen && (
+                    <div className="absolute z-10 right-0 mt-2 w-56 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl border border-white/30 overflow-hidden dropdown-enter">
+                      <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                        {AVAILABLE_MODELS.map((model, index) => (
+                          <button
+                            key={model}
+                            onClick={() => {
+                              setSelectedModel(model);
+                              setIsModelDropdownOpen(false);
+                            }}
+                            className={`w-full p-3 text-left hover:bg-amber-50 transition-all duration-200 flex items-center justify-between ${selectedModel === model ? 'bg-amber-100' : ''} ${index !== 0 ? 'border-t border-gray-100' : ''}`}
+                          >
+                            <span className="font-medium text-gray-900 text-sm">{model}</span>
+                            {selectedModel === model && (
+                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setMessages([]);
+                    const identifier = getChatIdentifier();
+                    if (identifier) {
+                      const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
+                      delete chatHistory[identifier];
+                      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 border border-white/10"
+                >
+                  Trocar arquivo
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -795,12 +891,12 @@ export function ChatPage() {
                   }}
                 >
                   <div
-                    className={`max-w-[75%] p-4 rounded-2xl shadow-2xl transition-all duration-300 ${message.type === 'user'
-                      ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-br-sm'
-                      : 'bg-white/95 text-gray-900 rounded-bl-sm border border-white/30 backdrop-blur-sm'
+                    className={`max-w-[75%] p-4 rounded-2xl transition-all duration-300 ${message.type === 'user'
+                      ? 'bg-white/10 text-white rounded-br-sm border border-white/10 backdrop-blur-sm'
+                      : 'text-white'
                       }`}
                   >
-                    <div className="whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0">
+                    <div className={`whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 ${message.type === 'assistant' ? 'prose-p:text-white/90 prose-headings:text-white prose-strong:text-white prose-li:text-white/90' : ''}`}>
                       <ReactMarkdown>{message.content}</ReactMarkdown>
                     </div>
                     {message.image && (
@@ -808,21 +904,17 @@ export function ChatPage() {
                         <img
                           src={message.image.startsWith('data:') ? message.image : `data:image/png;base64,${message.image}`}
                           alt="Generated visualization"
-                          className="rounded-lg max-w-full h-auto border border-gray-200 shadow-lg"
+                          className="rounded-lg max-w-full h-auto border border-white/20 shadow-lg"
                         />
                       </div>
                     )}
-                    <div className={`text-xs mt-2 ${message.type === 'user' ? 'text-white/90' : 'text-gray-600'
-                      }`}>
-                      {message.timestamp.toLocaleTimeString()}
-                    </div>
                   </div>
                 </div>
               ))
             )}
             {isLoading && (
               <div className="flex justify-start message-enter">
-                <div className="bg-white/95 text-gray-900 backdrop-blur-sm p-4 rounded-2xl rounded-bl-sm border border-white/30 shadow-xl">
+                <div className="text-white p-4 rounded-2xl">
                   <div className="flex items-center space-x-3">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
@@ -840,6 +932,7 @@ export function ChatPage() {
 
         {/* Message Input */}
         <div className="flex space-x-3 flex-shrink-0">
+
           {/* Chart Guide Button */}
           <button
             onClick={() => setIsChartGuideOpen(true)}
