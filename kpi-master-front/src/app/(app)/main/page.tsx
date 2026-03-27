@@ -76,7 +76,7 @@ export default function MainPage() {
         <div className={`flex-initial space-y-5 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
           <h1 className="text-4xl font-light text-gray-400">Olá,</h1>
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">{username}</h1>
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-amber-500 to-amber-500 bg-clip-text text-transparent">{username}</h1>
           <p className="text-2xl mt-4 text-gray-400 font-light">Bem vindo ao seu painel.</p>
         </div>
 

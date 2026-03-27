@@ -7,7 +7,8 @@ import { FaHome } from "react-icons/fa";
 import { MdOutlineManageSearch } from "react-icons/md";
 import { IoDocumentSharp } from "react-icons/io5";
 import { PiUsersFill } from "react-icons/pi";
-import { MdLeaderboard } from "react-icons/md";
+import { MdPhotoLibrary } from "react-icons/md";
+// NOTE: I added MdPhotoLibrary on top, but the import block is on line 10, so let's do this properly in another tool call. I will just replace Estatísticas with Galeria and MdLeaderboard with MdPhotoLibrary.
 import { MdLogout } from "react-icons/md";
 import { IoChatbox } from "react-icons/io5";
 import LoadingPopup from './LoadingPopup';
@@ -93,8 +94,8 @@ export default function Sidebar() {
             onClick={() => handleNavigation('/statistics')}
             className={navButtonClass('/statistics')}
           >
-            <MdLeaderboard size={20} className={isActive('/statistics') ? 'text-white' : 'text-gray-300 group-hover:text-white transition-colors'} />
-            <span className={isActive('/statistics') ? 'font-medium' : ''}>Estatísticas</span>
+            <MdPhotoLibrary size={20} className={isActive('/statistics') ? 'text-white' : 'text-gray-300 group-hover:text-white transition-colors'} />
+            <span className={isActive('/statistics') ? 'font-medium' : ''}>Galeria</span>
             {isActive('/statistics') && <div className="absolute left-0 w-1 h-8 bg-white rounded-r-full" />}
           </button>
 

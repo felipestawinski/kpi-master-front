@@ -4,7 +4,7 @@ import AuthGuard from '@/components/AuthGuard';
 import ChartGuidePopup from '@/components/ChartGuidePopup';
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState, useRef } from 'react';
-import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, BarChart3, Sparkles } from 'lucide-react';
+import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, BarChart3, Sparkles, Download, ImagePlus, Search } from 'lucide-react';
 
 type ApiFile = {
   id: number;
@@ -17,10 +17,13 @@ type ApiFile = {
 
 type ChatMessage = {
   id: string;
+  _id?: string; // MongoDB ObjectId for lazy image loading
   type: 'user' | 'assistant';
   content: string;
   timestamp: Date;
   image?: string; // Base64 encoded image or URL
+  hasImage?: boolean; // Flag from API indicating image exists
+  imageLoading?: boolean; // True while loading image lazily
 };
 
 type SelectionMode = 'files' | 'institutions';
@@ -67,9 +70,21 @@ export function ChatPage() {
   const [isChartGuideOpen, setIsChartGuideOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [amplifiedImage, setAmplifiedImage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Auto-hide toast after 3s
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const showToast = (msg: string) => setToastMessage(msg);
 
   // Track if chat is active (has messages) to expand the chat area
   const isChatActive = messages.length > 0 || isLoading;
@@ -82,38 +97,148 @@ export function ChatPage() {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  // Save chat history to localStorage
-  const saveChatHistory = (identifier: string, chatMessages: ChatMessage[]) => {
-    const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-    chatHistory[identifier] = chatMessages.map(msg => ({
-      ...msg,
-      timestamp: msg.timestamp.toISOString()
-    }));
-    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-  };
-
-  // Load chat history from localStorage
-  const loadChatHistory = (identifier: string): ChatMessage[] => {
-    const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-    const fileHistory = chatHistory[identifier];
-    if (fileHistory && Array.isArray(fileHistory)) {
-      return fileHistory.map((msg: any) => ({
-        ...msg,
-        timestamp: new Date(msg.timestamp)
-      }));
+  // Save a single chat message to MongoDB via API
+  const saveChatMessageToAPI = async (chatId: string, msg: ChatMessage) => {
+    try {
+      const res = await fetch('http://localhost:8080/chat/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `${token}` } : {}),
+        },
+        body: JSON.stringify({
+          chatId,
+          type: msg.type,
+          content: msg.content,
+          image: msg.image || '',
+          timestamp: msg.timestamp.toISOString(),
+        }),
+      });
+      const data = await res.json();
+      return data._id as string;
+    } catch (err) {
+      console.error('Error saving chat message:', err);
+      return null;
     }
-    return [];
   };
 
-  // Clear chat history for current selection
-  const clearChatHistory = () => {
+  // Load chat history from MongoDB via API
+  const loadChatHistoryFromAPI = async (chatId: string): Promise<ChatMessage[]> => {
+    try {
+      const res = await fetch('http://localhost:8080/chat/load', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `${token}` } : {}),
+        },
+        body: JSON.stringify({ chatId }),
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        return data.map((msg: any) => ({
+          id: msg._id || msg.id,
+          _id: msg._id,
+          type: msg.type,
+          content: msg.content,
+          timestamp: new Date(msg.timestamp),
+          hasImage: msg.hasImage || false,
+          imageLoading: false,
+        }));
+      }
+      return [];
+    } catch (err) {
+      console.error('Error loading chat history:', err);
+      return [];
+    }
+  };
+
+  // Load a single message's image lazily from MongoDB
+  const loadChatImage = async (messageId: string) => {
+    try {
+      const res = await fetch('http://localhost:8080/chat/image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `${token}` } : {}),
+        },
+        body: JSON.stringify({ messageId }),
+      });
+      const data = await res.json();
+      return data.image as string;
+    } catch (err) {
+      console.error('Error loading chat image:', err);
+      return null;
+    }
+  };
+
+  // Load messages and lazily load images for those that have them
+  const loadAndSetMessages = async (chatId: string) => {
+    const msgs = await loadChatHistoryFromAPI(chatId);
+    setMessages(msgs);
+
+    // Lazily load images for messages that have them
+    for (const msg of msgs) {
+      if (msg.hasImage && msg._id) {
+        // Mark as loading
+        setMessages(prev => prev.map(m => m._id === msg._id ? { ...m, imageLoading: true } : m));
+        const image = await loadChatImage(msg._id);
+        if (image) {
+          setMessages(prev => prev.map(m => m._id === msg._id ? { ...m, image, imageLoading: false } : m));
+        } else {
+          setMessages(prev => prev.map(m => m._id === msg._id ? { ...m, imageLoading: false } : m));
+        }
+      }
+    }
+  };
+
+  // Clear chat history for current selection via API
+  const clearChatHistory = async () => {
     const identifier = getChatIdentifier();
     if (!identifier) return;
 
-    const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-    delete chatHistory[identifier];
-    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    try {
+      await fetch('http://localhost:8080/chat/clear', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `${token}` } : {}),
+        },
+        body: JSON.stringify({ chatId: identifier }),
+      });
+    } catch (err) {
+      console.error('Error clearing chat history:', err);
+    }
     setMessages([]);
+  };
+
+  const saveToGallery = async (base64Image: string) => {
+    try {
+      const res = await fetch('http://localhost:8080/gallery/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `${token}` } : {}),
+        },
+        body: JSON.stringify({ image: base64Image }),
+      });
+      if (res.ok) {
+        showToast('Imagem salva na galeria!');
+      } else {
+        showToast('Erro ao salvar imagem.');
+      }
+    } catch (err) {
+      console.error('Error saving to gallery:', err);
+      showToast('Erro ao salvar imagem.');
+    }
+  };
+
+  const handleDownloadImage = (base64Image: string) => {
+    const link = document.createElement('a');
+    link.href = base64Image.startsWith('data:') ? base64Image : `data:image/png;base64,${base64Image}`;
+    link.download = `chart_${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Get unique institutions from files
@@ -171,7 +296,7 @@ export function ChatPage() {
     setSelectedInstitution(institution);
     selectAllFilesForInstitution(institution);
     const identifier = `institution_${institution}`;
-    setMessages(loadChatHistory(identifier));
+    loadAndSetMessages(identifier);
     setIsDropdownOpen(false);
   };
 
@@ -179,7 +304,7 @@ export function ChatPage() {
   const handleFileSelect = (file: ApiFile) => {
     setSelectedFile(file);
     const identifier = `file_${file.id}`;
-    setMessages(loadChatHistory(identifier));
+    loadAndSetMessages(identifier);
     setIsDropdownOpen(false);
   };
 
@@ -273,6 +398,16 @@ export function ChatPage() {
     setInputMessage('');
     setIsLoading(true);
 
+    // Save user message to MongoDB (fire-and-forget)
+    const identifier = getChatIdentifier();
+    if (identifier) {
+      saveChatMessageToAPI(identifier, userMessage).then(savedId => {
+        if (savedId) {
+          setMessages(prev => prev.map(m => m.id === userMessage.id ? { ...m, _id: savedId } : m));
+        }
+      });
+    }
+
     try {
       if (currentPrompt.toLowerCase().trim() === 'teste') {
         const assistantMessage: ChatMessage = {
@@ -283,8 +418,9 @@ export function ChatPage() {
         };
         const finalMessages = [...updatedMessages, assistantMessage];
         setMessages(finalMessages);
-        const identifier = getChatIdentifier();
-        if (identifier) saveChatHistory(identifier, finalMessages);
+        if (identifier) {
+          saveChatMessageToAPI(identifier, assistantMessage);
+        }
         setIsLoading(false);
         return;
       }
@@ -312,25 +448,21 @@ export function ChatPage() {
       const response = await res.text();
       const payload = JSON.parse(response);
 
-      if (payload.hasImage) {
-
-        console.log('imagem:', payload.image);
-      } else {
-        console.log('sem imagem');
-      }
-
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
         content: payload.text_response || response,
         timestamp: new Date(),
         image: payload.image || undefined,
+        hasImage: !!payload.image,
       };
 
       const finalMessages = [...updatedMessages, assistantMessage];
       setMessages(finalMessages);
-      const identifier = getChatIdentifier();
-      if (identifier) saveChatHistory(identifier, finalMessages);
+      // Save assistant message to MongoDB
+      if (identifier) {
+        saveChatMessageToAPI(identifier, assistantMessage);
+      }
     } catch (err) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -340,8 +472,9 @@ export function ChatPage() {
       };
       const finalMessages = [...updatedMessages, errorMessage];
       setMessages(finalMessages);
-      const identifier = getChatIdentifier();
-      if (identifier) saveChatHistory(identifier, finalMessages);
+      if (identifier) {
+        saveChatMessageToAPI(identifier, errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -455,7 +588,7 @@ export function ChatPage() {
         
         /* Expanded chat mode */
         .chat-expanded {
-          max-width: none !important;
+          max-width: 66rem !important;
           padding-left: 2rem !important;
           padding-right: 2rem !important;
         }
@@ -595,12 +728,9 @@ export function ChatPage() {
                 <button
                   onClick={() => {
                     setMessages([]);
-                    const identifier = getChatIdentifier();
-                    if (identifier) {
-                      const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '{}');
-                      delete chatHistory[identifier];
-                      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-                    }
+                    setSelectedFile(null);
+                    setSelectedInstitution(null);
+                    setSelectedFileIds(new Set());
                   }}
                   className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 border border-white/10"
                 >
@@ -896,16 +1026,45 @@ export function ChatPage() {
                       : 'text-white'
                       }`}
                   >
-                    <div className={`whitespace-pre-wrap leading-relaxed prose prose-sm max-w-none prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 ${message.type === 'assistant' ? 'prose-p:text-white/90 prose-headings:text-white prose-strong:text-white prose-li:text-white/90' : ''}`}>
+                    <div className={`prose prose-sm max-w-none prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 ${message.type === 'user' ? 'whitespace-pre-wrap' : ''} ${message.type === 'assistant' ? 'prose-p:text-white/90 prose-headings:text-white prose-strong:text-white prose-li:text-white/90 leading-normal' : 'leading-relaxed'}`}>
                       <ReactMarkdown>{message.content}</ReactMarkdown>
                     </div>
-                    {message.image && (
-                      <div className="mt-3">
+                    {message.imageLoading && (
+                      <div className="mt-3 flex items-center space-x-2 text-white/60 text-sm">
+                        <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                        <span>Carregando imagem...</span>
+                      </div>
+                    )}
+                    {message.image && !message.imageLoading && (
+                      <div className="mt-3 relative group inline-block cursor-pointer overflow-hidden rounded-lg" onClick={() => setAmplifiedImage(message.image!)}>
                         <img
                           src={message.image.startsWith('data:') ? message.image : `data:image/png;base64,${message.image}`}
                           alt="Generated visualization"
-                          className="rounded-lg max-w-full h-auto border border-white/20 shadow-lg"
+                          className="max-w-full h-auto border border-white/20 shadow-lg"
                         />
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                          <Search className="w-8 h-8 text-white/80 drop-shadow-lg" />
+                        </div>
+                        
+                        {/* Action Buttons (Bottom Left) */}
+                        <div className="absolute bottom-3 left-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDownloadImage(message.image!); }}
+                            className="p-2 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-md shadow-lg border border-white/20 transition-all hover:-translate-y-0.5"
+                            title="Baixar imagem"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); saveToGallery(message.image!); }}
+                            className="p-2 bg-amber-500/80 hover:bg-amber-600 text-white rounded-lg backdrop-blur-md shadow-lg border border-white/20 transition-all flex items-center space-x-2 hover:scale-105"
+                            title="Enviar para galeria"
+                          >
+                            <ImagePlus className="w-4 h-4" />
+                            <span className="text-xs font-medium">Salvar</span>
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1014,6 +1173,46 @@ export function ChatPage() {
         isOpen={isChartGuideOpen}
         onClose={() => setIsChartGuideOpen(false)}
       />
+
+      {/* Lightbox Modal */}
+      {amplifiedImage && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 lg:p-8"
+          onClick={() => setAmplifiedImage(null)}
+        >
+          <div className="absolute top-6 right-6 flex items-center space-x-4">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleDownloadImage(amplifiedImage); }}
+              className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md transition-all flex items-center space-x-2"
+            >
+              <Download className="w-5 h-5" />
+              <span className="font-medium hidden sm:inline">Baixar</span>
+            </button>
+            <button
+              onClick={() => setAmplifiedImage(null)}
+              className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="relative max-w-full max-h-full flex items-center justify-center">
+            <img 
+              src={amplifiedImage.startsWith('data:') ? amplifiedImage : `data:image/png;base64,${amplifiedImage}`}
+              alt="Amplified visualization"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] px-6 py-3 bg-black/80 backdrop-blur-md text-white border border-white/20 rounded-full shadow-2xl flex items-center space-x-3 animate-[slideIn_0.3s_ease-out]">
+          <Check className="w-4 h-4 text-green-400" />
+          <span className="text-sm font-medium">{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }
