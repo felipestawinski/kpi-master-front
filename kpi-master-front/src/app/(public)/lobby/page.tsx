@@ -4,12 +4,12 @@ import WhatIsIPFS from '@/components/IPFS';
 import DataAnalysis from '@/components/DataAnalysis';
 
 export default function LobbyPage() {
-  return (
-    <main className="min-h-screen">
-      <Header />
-      <About />
-      <WhatIsIPFS />
-      <DataAnalysis />
-    </main>
-  );
+ return (
+  <main className="min-h-screen">
+   <Header />
+   <About />
+   <WhatIsIPFS />
+   <DataAnalysis />
+  </main>
+ );
 }
