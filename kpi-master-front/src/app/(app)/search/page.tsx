@@ -11,6 +11,7 @@ type ApiFile = {
  writer: string;
  date: string;
  fileAddress: string;
+ fileType?: string;
 };
 
 type SearchTypeOption = {

@@ -2,9 +2,10 @@
 
 import AuthGuard from '@/components/AuthGuard';
 import ChartGuidePopup from '@/components/ChartGuidePopup';
+import FilePreviewPopup from '@/components/FilePreviewPopup';
 import ReactMarkdown from 'react-markdown';
 import { useEffect, useState, useRef } from 'react';
-import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, BarChart3, Sparkles, Download, ImagePlus, Search } from 'lucide-react';
+import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, BarChart3, Sparkles, Download, ImagePlus, Search, Eye } from 'lucide-react';
 
 type ApiFile = {
  id: number;
@@ -13,6 +14,13 @@ type ApiFile = {
  writer: string;
  date: string;
  fileAddress: string;
+ fileType?: string;
+};
+
+type FilePreviewResponse = {
+ headers?: string[];
+ rows?: string[][];
+ detail?: string;
 };
 
 type ChatMessage = {
@@ -72,6 +80,12 @@ export function ChatPage() {
  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
  const [amplifiedImage, setAmplifiedImage] = useState<string | null>(null);
  const [toastMessage, setToastMessage] = useState<string | null>(null);
+ const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+ const [previewFileId, setPreviewFileId] = useState<number | null>(null);
+ const [previewLoading, setPreviewLoading] = useState(false);
+ const [previewError, setPreviewError] = useState<string | null>(null);
+ const [previewHeaders, setPreviewHeaders] = useState<string[]>([]);
+ const [previewRows, setPreviewRows] = useState<string[][]>([]);
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const dropdownRef = useRef<HTMLDivElement>(null);
  const modelDropdownRef = useRef<HTMLDivElement>(null);
@@ -241,6 +255,78 @@ export function ChatPage() {
   document.body.removeChild(link);
  };
 
+ const getPreviewFiles = (): ApiFile[] => {
+  if (selectionMode === 'files') {
+   return selectedFile ? [selectedFile] : [];
+  }
+
+  if (!selectedInstitution) {
+   return [];
+  }
+
+  return getFilesForInstitution(selectedInstitution).filter((file) => selectedFileIds.has(file.id));
+ };
+
+ const loadFilePreview = async (fileId: number) => {
+  const file = files.find((item) => item.id === fileId);
+  if (!file) {
+   setPreviewError('Arquivo não encontrado para pré-visualização.');
+   setPreviewHeaders([]);
+   setPreviewRows([]);
+   return;
+  }
+
+  setPreviewLoading(true);
+  setPreviewError(null);
+  setPreviewHeaders([]);
+  setPreviewRows([]);
+
+  try {
+  const response = await fetch('http://localhost:8080/file-preview', {
+   method: 'POST',
+   headers: {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `${token}` } : {}),
+   },
+   body: JSON.stringify({
+    fileId,
+    maxRows: 20,
+    maxCols: 12,
+   }),
+  });
+
+   if (!response.ok) {
+   const payload: FilePreviewResponse = await response.json().catch(() => ({}));
+   throw new Error(payload.detail || `Falha ao carregar arquivo (status ${response.status}).`);
+   }
+
+  const preview: FilePreviewResponse = await response.json();
+  setPreviewHeaders(preview.headers ?? []);
+  setPreviewRows(preview.rows ?? []);
+  } catch {
+   setPreviewError('Não foi possível carregar a prévia deste arquivo. Verifique se o arquivo está acessível e tente novamente.');
+  } finally {
+   setPreviewLoading(false);
+  }
+ };
+
+ const handleOpenPreview = () => {
+  const previewFiles = getPreviewFiles();
+  if (previewFiles.length === 0) {
+   return;
+  }
+
+  const targetFile = previewFiles.find((file) => file.id === previewFileId) || previewFiles[0];
+  setPreviewFileId(targetFile.id);
+  setIsPreviewOpen(true);
+  void loadFilePreview(targetFile.id);
+ };
+
+ const handlePreviewFileSelect = (fileId: number) => {
+  setPreviewFileId(fileId);
+  void loadFilePreview(fileId);
+ };
+
  // Get unique institutions from files
  const getInstitutions = (): string[] => {
   const institutions = new Set(files.map(f => f.institution));
@@ -288,6 +374,8 @@ export function ChatPage() {
   setSelectedInstitution(null);
   setSelectedFileIds(new Set());
   setMessages([]);
+  setIsPreviewOpen(false);
+  setPreviewFileId(null);
   setIsDropdownOpen(false);
  };
 
@@ -441,6 +529,8 @@ export function ChatPage() {
      prompt: currentPrompt,
      generateChart: generateChart,
      chartRecommendation: chartRecommendation,
+      chatId: identifier,
+      forceRefresh: false,
      model: selectedModel,
     }),
    });
@@ -731,10 +821,21 @@ export function ChatPage() {
           setSelectedFile(null);
           setSelectedInstitution(null);
           setSelectedFileIds(new Set());
+          setIsPreviewOpen(false);
+          setPreviewFileId(null);
          }}
          className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 "
         >
          Trocar arquivo
+        </button>
+        <button
+         onClick={handleOpenPreview}
+         disabled={getPreviewFiles().length === 0}
+         className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-white/80 hover:text-white transition-all duration-200 flex items-center space-x-1.5"
+         title="Pré-visualizar arquivo"
+        >
+         <Eye className="w-3.5 h-3.5" />
+         <span>Prévia</span>
         </button>
        </div>
       </div>
@@ -1173,6 +1274,18 @@ export function ChatPage() {
     isOpen={isChartGuideOpen}
     onClose={() => setIsChartGuideOpen(false)}
    />
+
+  <FilePreviewPopup
+   isOpen={isPreviewOpen}
+   onClose={() => setIsPreviewOpen(false)}
+   files={getPreviewFiles()}
+   selectedFileId={previewFileId}
+   onFileSelect={handlePreviewFileSelect}
+   loading={previewLoading}
+   error={previewError}
+   headers={previewHeaders}
+   rows={previewRows}
+  />
 
    {/* Lightbox Modal */}
    {amplifiedImage && (
