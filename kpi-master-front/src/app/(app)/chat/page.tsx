@@ -45,20 +45,20 @@ const DEFAULT_TEMPLATE_QUESTIONS = [
 ];
 
 const AVAILABLE_MODELS = [
- "gpt-5.4-pro",
- "gpt-5.4",
- "gpt-5.2-pro",
- "gpt-5.2",
+ "gpt-4o",
+ "gpt-4o-mini",
+ "gpt-4.1",
  "gpt-5",
  "gpt-5-mini",
- "gpt-5-nano",
- "gpt-4.1",
- "gpt-4.1-mini",
- "gpt-4.1-nano",
- "gpt-4o",
+ "o1",
+ "o3",
+ "o4-mini",
+ "gpt-5.4",
+ "gpt-5.4-mini",
 ];
 
 const DEFAULT_MODEL = "gpt-5-mini";
+const MAX_FILES_PER_ANALYSIS_REQUEST = 4;
 
 export function ChatPage() {
  const [files, setFiles] = useState<ApiFile[]>([]);
@@ -518,6 +518,10 @@ export function ChatPage() {
     ? [selectedFile!.id]
     : Array.from(selectedFileIds);
 
+  if (fileIds.length > MAX_FILES_PER_ANALYSIS_REQUEST) {
+   throw new Error(`Selecione no máximo ${MAX_FILES_PER_ANALYSIS_REQUEST} arquivos por análise.`);
+  }
+
    const res = await fetch('http://localhost:8080/analysis-gen', {
     method: 'POST',
     headers: {
@@ -535,8 +539,18 @@ export function ChatPage() {
     }),
    });
 
-   const response = await res.text();
-   const payload = JSON.parse(response);
+  const response = await res.text();
+  let payload: any = {};
+  try {
+   payload = response ? JSON.parse(response) : {};
+  } catch {
+   payload = { raw: response };
+  }
+
+  if (!res.ok) {
+   const detail = payload?.detail || payload?.message || payload?.raw || 'Erro ao processar a análise.';
+   throw new Error(detail);
+  }
 
    const assistantMessage: ChatMessage = {
     id: (Date.now() + 1).toString(),
@@ -554,10 +568,14 @@ export function ChatPage() {
     saveChatMessageToAPI(identifier, assistantMessage);
    }
   } catch (err) {
+   const errorText = err instanceof Error && err.message
+    ? err.message
+    : 'Desculpe, ocorreu um erro ao processar sua pergunta.';
+
    const errorMessage: ChatMessage = {
     id: (Date.now() + 1).toString(),
     type: 'assistant',
-    content: 'Desculpe, ocorreu um erro ao processar sua pergunta.',
+    content: errorText,
     timestamp: new Date(),
    };
    const finalMessages = [...updatedMessages, errorMessage];
