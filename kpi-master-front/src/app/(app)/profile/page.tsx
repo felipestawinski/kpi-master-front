@@ -86,7 +86,6 @@ export function ProfilePage() {
    const text = await res.text();
    if (!res.ok) throw new Error(text || 'Upload failed');
 
-   console.log('Upload response:', text);
    const profileURL = JSON.parse(text).profilePicture;
 
    const finalUrlFromServer = profileURL;

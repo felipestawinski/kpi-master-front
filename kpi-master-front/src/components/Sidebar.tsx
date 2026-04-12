@@ -11,8 +11,8 @@ import { PiUsersFill } from "react-icons/pi";
 import { MdPhotoLibrary } from "react-icons/md";
 import { MdLogout } from "react-icons/md";
 import { IoChatbox } from "react-icons/io5";
-import { HiMenuAlt2 } from 'react-icons/hi';
-import LoadingPopup from './LoadingPopup';
+import { HiMenu } from 'react-icons/hi';
+import TopLoadingBar from './TopLoadingBar';
 import { useLoading } from '@/components/hooks/useLoading';
 import { usePathname } from 'next/navigation';
 
@@ -44,31 +44,19 @@ export default function Sidebar() {
     Icon: IconType,
     onboardingId?: string,
     index: number = 0
-  ) => (
-    <button
-      key={route}
-      onClick={() => handleNavigation(route)}
-      className="group relative w-full flex items-center h-11 px-0 overflow-hidden"
-      data-onboarding-id={onboardingId}
-      title={isCollapsed ? label : undefined}
-      style={{
-        color: isActive(route) ? '#ffffff' : '#d1d5db',
-        background: isActive(route) ? 'rgba(255,255,255,0.05)' : 'transparent',
-        transition: 'background 0.25s ease, color 0.25s ease',
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive(route)) {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-          e.currentTarget.style.color = '#ffffff';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive(route)) {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = '#d1d5db';
-        }
-      }}
-    >
+  ) => {
+    const active = isActive(route);
+
+    return (
+      <button
+        key={route}
+        onClick={() => handleNavigation(route)}
+        className={`group relative w-full flex items-center h-12 px-0 overflow-hidden ${
+          active ? 'text-white bg-white/12' : 'text-gray-300 hover:text-white hover:bg-white/12'
+        }`}
+        data-onboarding-id={onboardingId}
+        title={isCollapsed ? label : undefined}
+      >
       {/* Active indicator bar */}
       <span
         style={{
@@ -78,32 +66,19 @@ export default function Sidebar() {
           bottom: '15%',
           width: '3px',
           borderRadius: '0 4px 4px 0',
-          background: isActive(route)
+          background: active
             ? 'linear-gradient(180deg, #fbbf24, #f59e0b)'
             : 'transparent',
-          boxShadow: isActive(route) ? '0 0 8px rgba(251,191,36,0.5)' : 'none',
-          opacity: isActive(route) ? 1 : 0,
+          boxShadow: active ? '0 0 8px rgba(251,191,36,0.5)' : 'none',
+          opacity: active ? 1 : 0,
           transition: 'opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease',
         }}
       />
 
       {/* Icon — fixed position, never moves */}
       <span className="flex items-center justify-center w-20 shrink-0">
-        <span
-          style={{
-            display: 'flex',
-            transition: 'transform 0.2s ease',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.15)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-        >
-          <Icon
-            size={20}
-            style={{
-              color: isActive(route) ? '#ffffff' : undefined,
-              transition: 'color 0.25s ease',
-            }}
-          />
+        <span className="flex">
+          <Icon size={20} />
         </span>
       </span>
 
@@ -121,32 +96,32 @@ export default function Sidebar() {
             opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${isCollapsed ? '0s' : `${0.05 + index * 0.03}s`},
             transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${isCollapsed ? '0s' : `${0.05 + index * 0.03}s`}
           `,
-          fontWeight: isActive(route) ? 500 : 400,
+          fontWeight: active ? 500 : 400,
         }}
       >
         {label}
       </span>
-    </button>
-  );
+      </button>
+    );
+  };
 
   return (
     <>
-      <LoadingPopup isOpen={isLoading} />
+      <TopLoadingBar isVisible={isLoading} />
 
       <div
         style={{
           width: isCollapsed ? '5rem' : '16rem',
           transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
-        className="text-gray-300 flex flex-col justify-between pt-6 text-sm z-10 backdrop-blur-lg bg-slate-900/55 border-r border-slate-700/40"
+        className="relative text-gray-300 flex flex-col justify-between pt-6 text-sm z-40 bg-zinc-900/90 border-r border-zinc-700/40"
       >
-        <div className="text-gray-300 flex flex-col space-y-1">
+        <div className="text-gray-300 flex flex-col">
           {/* Menu toggle button */}
           <button
             onClick={() => setIsCollapsed((prev) => !prev)}
-            className="w-full flex items-center h-11 mb-2 text-gray-300 hover:text-white hover:bg-white/5 px-0"
+            className="w-full flex items-center h-12 text-gray-300 hover:text-white hover:bg-white/12 px-0"
             title={isCollapsed ? 'Expandir menu' : 'Comprimir menu'}
-            style={{ transition: 'background 0.25s ease, color 0.25s ease' }}
           >
             <span className="flex items-center justify-center w-20 shrink-0">
               <span
@@ -156,7 +131,7 @@ export default function Sidebar() {
                   transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
-                <HiMenuAlt2 size={20} />
+                <HiMenu size={20} />
               </span>
             </span>
           </button>
@@ -170,7 +145,7 @@ export default function Sidebar() {
         </div>
 
         {/* Bottom section with divider */}
-        <div className="text-gray-300 flex flex-col space-y-1 pb-6 pt-4 mt-4"
+        <div className="text-gray-300 flex flex-col mt-auto pb-6 pt-2"
           style={{
             borderTop: '1px solid rgba(255,255,255,0.07)',
           }}
@@ -180,24 +155,14 @@ export default function Sidebar() {
             onClick={() => {
               startLoading();
               localStorage.removeItem('token');
-              router.push('/login');
+            router.push('/login');
             }}
-            className="group w-full flex items-center h-11 px-0"
+            className="group w-full flex items-center h-12 px-0 hover:bg-red-500/15"
             title={isCollapsed ? 'Logout' : undefined}
-            style={{ transition: 'background 0.25s ease' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
             <span className="flex items-center justify-center w-20 shrink-0">
-              <span
-                style={{
-                  display: 'flex',
-                  transition: 'transform 0.2s ease',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.15)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-              >
-                <MdLogout size={20} className='text-red-400 group-hover:text-red-300 transition-colors' />
+              <span className="flex">
+                <MdLogout size={20} className='text-red-400 group-hover:text-red-300' />
               </span>
             </span>
             <span

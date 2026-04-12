@@ -2,310 +2,162 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function RegisterPage() {
- const router = useRouter();
- 
- const [formData, setFormData] = useState({
-  email: '',
-  password: '',
-  username: '',
-  institution: '',
-  role: '',
-  accessType: '',
- });
+  const router = useRouter();
 
- const [isRedirecting, setIsRedirecting] = useState(false);
-
- const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  setFormData({
-   ...formData,
-   [e.target.name]: e.target.value,
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    username: '',
+    institution: '',
+    role: '',
+    accessType: '',
   });
- };
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsRedirecting(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-  try {
-   const response = await fetch('http://localhost:8080/register', {
-    method: 'POST',
-    headers: {
-     'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(formData),
-   });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsRedirecting(true);
+    setRegisterError(null);
 
-   if (!response.ok) {
-    throw new Error('Falha ao registrar');
-   }
+    try {
+      const response = await fetch('http://localhost:8080/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-   const result = await response.text();
-   console.log(result)
-   if (!response.ok) {
-    throw new Error(result);
-   }
+      const result = await response.text();
+      if (!response.ok) throw new Error(result || 'Falha ao registrar');
 
-   console.log('Sucesso:', result);
-   alert('Registro realizado com sucesso!');
-   localStorage.setItem('isNewUser', 'true')
-   
-   setTimeout(() => {
-    router.push('/login');
-   }, 1000);
-  } catch (error) {
-   console.error('Erro:', error);
-   alert('Falha no registro.');
-   setIsRedirecting(false);
-  }
- };
+      localStorage.setItem('isNewUser', 'true');
+      setTimeout(() => { router.push('/login'); }, 1000);
+    } catch (error: any) {
+      console.error('Erro:', error);
+      setRegisterError(error.message || 'Falha no registro.');
+      setIsRedirecting(false);
+    }
+  };
 
- const handleLoginNavigation = () => {
-  setIsRedirecting(true);
-  router.push('/login');
- };
+  const inputClass = `w-full px-4 py-2.5 rounded-lg bg-zinc-900 border border-zinc-700
+    text-zinc-100 placeholder:text-zinc-600 text-sm
+    focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30
+    disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150`;
 
- return (
-  <div className="min-h-screen flex">
-   {/* Left side - Brand section */}
-   <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#1e2938] via-[#2a3848] to-[#1e2938] relative overflow-hidden">
-    {/* Decorative elements */}
-    <div className="absolute top-20 -left-20 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl"></div>
-    <div className="absolute bottom-20 -right-20 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl"></div>
-    
-    <div className="relative z-10 flex flex-col justify-center px-16 text-white">
-     <div className="mb-8">
-      <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-orange-500/20">
-       <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-       </svg>
+  const labelClass = 'block text-xs font-medium text-zinc-400 mb-1.5';
+
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-zinc-900 py-10 relative">
+
+      {/* Card */}
+      <div className="w-full max-w-sm px-8 py-10 rounded-2xl bg-zinc-800/60 border border-zinc-700/50 shadow-2xl shadow-black/40">
+
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-amber-500 mb-2">
+            Projeto KPI
+          </p>
+          <h1 className="text-2xl font-bold text-zinc-100">Criar conta</h1>
+          <p className="mt-1 text-sm text-zinc-500">Preencha seus dados para começar</p>
+        </div>
+
+        {/* Error inline */}
+        {registerError && (
+          <div className="mb-5 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            {registerError}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className={labelClass}>E-mail</label>
+            <input type="email" name="email" placeholder="voce@exemplo.com"
+              value={formData.email} onChange={handleChange}
+              required disabled={isRedirecting} className={inputClass} />
+          </div>
+
+          <div>
+            <label className={labelClass}>Senha</label>
+            <input type="password" name="password" placeholder="Crie uma senha forte"
+              value={formData.password} onChange={handleChange}
+              required disabled={isRedirecting} className={inputClass} />
+          </div>
+
+          <div>
+            <label className={labelClass}>Nome de usuário</label>
+            <input type="text" name="username" placeholder="Escolha um nome de usuário"
+              value={formData.username} onChange={handleChange}
+              required disabled={isRedirecting} className={inputClass} />
+          </div>
+
+          <div>
+            <label className={labelClass}>Instituição</label>
+            <input type="text" name="institution" placeholder="Sua instituição"
+              value={formData.institution} onChange={handleChange}
+              disabled={isRedirecting} className={inputClass} />
+          </div>
+
+          <div>
+            <label className={labelClass}>Cargo</label>
+            <input type="text" name="role" placeholder="Seu cargo"
+              value={formData.role} onChange={handleChange}
+              disabled={isRedirecting} className={inputClass} />
+          </div>
+
+          <div>
+            <label className={labelClass}>Tipo de acesso</label>
+            <input type="text" name="accessType" placeholder="Tipo de acesso"
+              value={formData.accessType} onChange={handleChange}
+              disabled={isRedirecting} className={inputClass} />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isRedirecting}
+            className="w-full mt-2 py-2.5 rounded-lg font-semibold text-sm text-zinc-900
+                       bg-amber-500 hover:bg-amber-400
+                       disabled:opacity-40 disabled:cursor-not-allowed
+                       transition-colors duration-200 shadow-lg shadow-amber-500/20"
+          >
+            {isRedirecting ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Criando conta...
+              </span>
+            ) : 'Criar conta'}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center gap-3">
+          <div className="flex-1 h-px bg-zinc-700" />
+          <span className="text-xs text-zinc-600">ou</span>
+          <div className="flex-1 h-px bg-zinc-700" />
+        </div>
+
+        <Link
+          href="/login"
+          className="block w-full py-2.5 rounded-lg font-semibold text-sm text-center
+                     text-amber-500 border border-amber-500/50
+                     hover:bg-amber-500/10 transition-colors duration-200"
+        >
+          Já tenho uma conta
+        </Link>
+
+        <p className="mt-6 text-center text-xs text-zinc-600">
+          <Link href="/lobby" className="hover:text-zinc-400 transition-colors">← Voltar ao início</Link>
+        </p>
       </div>
-      <h1 className="text-5xl font-bold mb-4 leading-tight">
-       Entre para o<br />
-       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-600">
-        KPI Master
-       </span>
-      </h1>
-      <p className="text-gray-400 text-lg leading-relaxed max-w-md">
-       Comece a acompanhar e otimizar suas métricas de desempenho hoje.
-      </p>
-     </div>
-     
-     {/* Feature highlights */}
-     <div className="space-y-4 mt-8">
-      <div className="flex items-center gap-3">
-       <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-       <span className="text-gray-300">Análises em tempo real</span>
-      </div>
-      <div className="flex items-center gap-3">
-       <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-       <span className="text-gray-300">Dashboards intuitivos</span>
-      </div>
-      <div className="flex items-center gap-3">
-       <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-       <span className="text-gray-300">Área de trabalho colaborativa</span>
-      </div>
-     </div>
-    </div>
-   </div>
-
-   {/* Right side - Form section */}
-   <div className="flex-1 flex items-center justify-center bg-white relative">
-    {/* Subtle background pattern */}
-    <div className="absolute inset-0 opacity-[0.02]" style={{
-     backgroundImage: `radial-gradient(circle at 1px 1px, #1e2938 1px, transparent 0)`,
-     backgroundSize: '40px 40px'
-    }}></div>
-
-    <div className="relative z-10 w-full max-w-md px-8 py-8">
-     {/* Mobile logo */}
-     <div className="lg:hidden mb-8 flex justify-center">
-      <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
-       <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-       </svg>
-      </div>
-     </div>
-
-     <div className="mb-8">
-      <h2 className="text-3xl font-bold text-[#1e2938] mb-2">Criar conta</h2>
-      <p className="text-gray-500">Preencha seus dados para começar</p>
-     </div>
-
-     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="group">
-       <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-       <input
-        type="email"
-        name="email"
-        placeholder="voce@exemplo.com"
-        value={formData.email}
-        onChange={handleChange}
-        className="w-full px-4 py-3 bg-gray-50 rounded-xl 
-             text-[#1e2938] placeholder:text-gray-400
-             focus:outline-none focus:border-orange-500 focus:bg-white
-             transition-all duration-200
-             disabled:opacity-50 disabled:cursor-not-allowed"
-        required
-        disabled={isRedirecting}
-       />
-      </div>
-
-      <div className="group">
-       <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
-       <input
-        type="password"
-        name="password"
-        placeholder="Crie uma senha forte"
-        value={formData.password}
-        onChange={handleChange}
-        className="w-full px-4 py-3 bg-gray-50 rounded-xl 
-             text-[#1e2938] placeholder:text-gray-400
-             focus:outline-none focus:border-orange-500 focus:bg-white
-             transition-all duration-200
-             disabled:opacity-50 disabled:cursor-not-allowed"
-        required
-        disabled={isRedirecting}
-       />
-      </div>
-
-      <div className="group">
-       <label className="block text-sm font-medium text-gray-700 mb-2">Nome de usuário</label>
-       <input
-        type="text"
-        name="username"
-        placeholder="Escolha um nome de usuário"
-        value={formData.username}
-        onChange={handleChange}
-        className="w-full px-4 py-3 bg-gray-50 rounded-xl 
-             text-[#1e2938] placeholder:text-gray-400
-             focus:outline-none focus:border-orange-500 focus:bg-white
-             transition-all duration-200
-             disabled:opacity-50 disabled:cursor-not-allowed"
-        required
-        disabled={isRedirecting}
-       />
-      </div>
-
-      <div className="group">
-       <label className="block text-sm font-medium text-gray-700 mb-2">Instituição</label>
-       <input
-        type="text"
-        name="institution"
-        placeholder="Sua instituição"
-        value={formData.institution}
-        onChange={handleChange}
-        className="w-full px-4 py-3 bg-gray-50 rounded-xl 
-             text-[#1e2938] placeholder:text-gray-400
-             focus:outline-none focus:border-orange-500 focus:bg-white
-             transition-all duration-200
-             disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={isRedirecting}
-       />
-      </div>
-
-      <div className="group">
-       <label className="block text-sm font-medium text-gray-700 mb-2">Cargo</label>
-       <input
-        type="text"
-        name="role"
-        placeholder="Seu cargo"
-        value={formData.role}
-        onChange={handleChange}
-        className="w-full px-4 py-3 bg-gray-50 rounded-xl 
-             text-[#1e2938] placeholder:text-gray-400
-             focus:outline-none focus:border-orange-500 focus:bg-white
-             transition-all duration-200
-             disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={isRedirecting}
-       />
-      </div>
-
-      <div className="group">
-       <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de acesso</label>
-       <input
-        type="text"
-        name="accessType"
-        placeholder="Tipo de acesso"
-        value={formData.accessType}
-        onChange={handleChange}
-        className="w-full px-4 py-3 bg-gray-50 rounded-xl 
-             text-[#1e2938] placeholder:text-gray-400
-             focus:outline-none focus:border-orange-500 focus:bg-white
-             transition-all duration-200
-             disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={isRedirecting}
-       />
-      </div>
-
-      <button
-       type="submit"
-       className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 
-            text-white font-medium rounded-xl 
-            hover:from-orange-600 hover:to-orange-700 
-            focus:outline-none focus:ring-4 focus:ring-orange-500/20
-            transform hover:scale-[1.02] active:scale-[0.98]
-            transition-all duration-200
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-            shadow-lg shadow-orange-500/25 mt-2"
-       disabled={isRedirecting}
-      >
-       {isRedirecting ? (
-        <span className="flex items-center justify-center gap-2">
-         <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-         </svg>
-         Criando conta...
-        </span>
-       ) : (
-        'Criar conta'
-       )}
-      </button>
-     </form>
-
-     <div className="mt-6">
-      <div className="relative">
-       <div className="absolute inset-0 flex items-center">
-        <div className="w-full border-t border-gray-200"></div>
-       </div>
-       <div className="relative flex justify-center text-sm">
-        <span className="px-4 bg-white text-gray-500">Já tem uma conta?</span>
-       </div>
-      </div>
-
-      <button
-       onClick={handleLoginNavigation}
-       className="w-full mt-6 py-3.5 bg-white 
-            text-[#1e2938] font-medium rounded-xl 
-            hover:border-[#1e2938] hover:bg-gray-50
-            focus:outline-none focus:ring-4 focus:ring-gray-200
-            transform hover:scale-[1.02] active:scale-[0.98]
-            transition-all duration-200
-            disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-       disabled={isRedirecting}
-      >
-       Entrar
-      </button>
-     </div>
-    </div>
-   </div>
-
-   {/* Loading overlay */}
-   {isRedirecting && (
-    <div className="absolute inset-0 bg-[#1e2938]/60 backdrop-blur-sm flex items-center justify-center z-50">
-     <div className="bg-white p-8 rounded-2xl shadow-2xl">
-      <div className="flex flex-col items-center gap-4">
-       <div className="relative">
-        <div className="w-12 h-12 border-4 border-orange-200 rounded-full"></div>
-        <div className="absolute top-0 left-0 w-12 h-12 border-4 border-orange-500 rounded-full border-t-transparent animate-spin"></div>
-       </div>
-       <p className="text-[#1e2938] font-medium">Configurando sua conta...</p>
-      </div>
-     </div>
-    </div>
-   )}
-  </div>
- );
+    </main>
+  );
 }

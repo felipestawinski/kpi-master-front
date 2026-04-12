@@ -12,6 +12,7 @@
     "@react-three/fiber": "^9.4.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "gsap": "^3.14.2",
     "lucide-react": "^0.546.0",
     "next": "^15.5.7",
     "react": "^19.0.0",

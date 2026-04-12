@@ -96,32 +96,32 @@ export function GalleryPage() {
       <p className="text-sm">Gere gráficos no chat e clique em "Enviar para Galeria".</p>
      </div>
     ) : (
-     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
       {images.map(img => (
        <div 
         key={img._id} 
-        className="group relative rounded-xl overflow-hidden bg-black/40 shadow-xl cursor-pointer hover:border-amber-500/50 transition-all duration-300"
+        className="group relative rounded-lg overflow-hidden bg-white/[0.04] border border-white/[0.06] cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.08)]"
         onClick={() => setSelectedImage(img)}
        >
-        <div className="aspect-[4/3] w-full bg-black/60 flex items-center justify-center overflow-hidden p-2">
+        <div className="aspect-square w-full bg-black/30 flex items-center justify-center overflow-hidden p-1.5">
          <img 
           src={img.image.startsWith('data:') ? img.image : `data:image/png;base64,${img.image}`} 
           alt="Gallery item"
-          className="max-w-full max-h-full object-contain drop-shadow-lg"
+          className="max-w-full max-h-full object-contain"
          />
         </div>
         
-        {/* Hover overlay for delete */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-         <Search className="w-8 h-8 text-white/80" />
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+         <Search className="w-5 h-5 text-white/70" />
         </div>
 
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+        <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
          <button 
           onClick={(e) => { e.stopPropagation(); deleteImage(img._id); }}
-          className="p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-lg backdrop-blur-md shadow-lg transition-colors"
+          className="p-1.5 bg-red-500/70 hover:bg-red-500 text-white rounded-md backdrop-blur-md shadow-lg transition-colors"
          >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" />
          </button>
         </div>
        </div>
