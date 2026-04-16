@@ -6,7 +6,6 @@ import { AiOutlineCloudUpload } from "react-icons/ai";
 import { MdOutlineManageSearch, MdPhotoLibrary } from "react-icons/md";
 import { IoChatbox } from "react-icons/io5";
 import { useLoading } from '@/components/hooks/useLoading';
-import { IcosahedronBackground } from '@/components/IcosahedronBackground';
 
 export default function MainPage() {
     const router = useRouter();
@@ -73,8 +72,6 @@ export default function MainPage() {
                 {/* Greeting section */}
                 <div className="relative overflow-hidden bg-zinc-900/90 -mx-11 -mt-11">
 
-                    {/* Icosahedron background, scoped to greeting section */}
-                    <IcosahedronBackground />
 
                     {/* Greeting text */}
                     <div className={`relative z-10 flex-initial space-y-5 items-center text-center py-10 px-8 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'

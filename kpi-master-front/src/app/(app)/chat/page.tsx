@@ -5,8 +5,8 @@ import ChartGuidePopup from '@/components/ChartGuidePopup';
 import FilePreviewPopup from '@/components/FilePreviewPopup';
 import ReactMarkdown from 'react-markdown';
 import MessageReveal from '@/components/MessageReveal';
-import { useEffect, useState, useRef } from 'react';
-import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, Download, ImagePlus, Search, Eye, Wrench, Image } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, Download, ImagePlus, Search, Eye, Wrench, Image, Code, Copy, CheckCheck } from 'lucide-react';
 
 type ApiFile = {
   id: number;
@@ -33,6 +33,7 @@ type ChatMessage = {
   image?: string; // Base64 encoded image or URL
   hasImage?: boolean; // Flag from API indicating image exists
   imageLoading?: boolean; // True while loading image lazily
+  chartCode?: string; // Python code used to generate the chart
 };
 
 type SelectionMode = 'files' | 'institutions';
@@ -89,6 +90,9 @@ export function ChatPage() {
   const [previewRows, setPreviewRows] = useState<string[][]>([]);
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
   const [imageGenSelected, setImageGenSelected] = useState(false);
+  const [expandedCodeMsgIds, setExpandedCodeMsgIds] = useState<Set<string>>(new Set());
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+  const [scrollThumb, setScrollThumb] = useState({ top: 0, height: 0, visible: false });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -116,6 +120,73 @@ export function ChatPage() {
     scrollToBottom();
   }, [messages, isLoading]);
 
+  // Track scroll position for the fixed right-edge scrollbar
+  useEffect(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    const update = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const canScroll = scrollHeight > clientHeight;
+      if (!canScroll) {
+        setScrollThumb({ top: 0, height: 0, visible: false });
+        return;
+      }
+      const thumbRatio = clientHeight / scrollHeight;
+      const thumbHeight = Math.max(thumbRatio * 100, 8); // percentage, min 8%
+      const scrollRatio = scrollTop / (scrollHeight - clientHeight);
+      const thumbTop = scrollRatio * (100 - thumbHeight);
+      setScrollThumb({ top: thumbTop, height: thumbHeight, visible: true });
+    };
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', update);
+      ro.disconnect();
+    };
+  }, [messages, isLoading]);
+
+  // Drag-to-scroll handler for the fixed scrollbar thumb
+  const handleScrollbarDrag = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    const startY = e.clientY;
+    const startScrollTop = el.scrollTop;
+    const trackHeight = window.innerHeight;
+    const { scrollHeight, clientHeight } = el;
+    const maxScroll = scrollHeight - clientHeight;
+
+    const onMove = (ev: MouseEvent) => {
+      const deltaY = ev.clientY - startY;
+      const scrollDelta = (deltaY / trackHeight) * scrollHeight;
+      el.scrollTop = Math.min(Math.max(startScrollTop + scrollDelta, 0), maxScroll);
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.body.style.cursor = 'grabbing';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, []);
+
+  // Click on track to jump scroll position
+  const handleTrackClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    // Ignore clicks on the thumb itself
+    if ((e.target as HTMLElement).classList.contains('fixed-scroll-thumb')) return;
+    const trackRect = e.currentTarget.getBoundingClientRect();
+    const clickRatio = (e.clientY - trackRect.top) / trackRect.height;
+    const { scrollHeight, clientHeight } = el;
+    el.scrollTop = clickRatio * (scrollHeight - clientHeight);
+  }, []);
+
   // Save a single chat message to MongoDB via API
   const saveChatMessageToAPI = async (chatId: string, msg: ChatMessage) => {
     try {
@@ -130,6 +201,7 @@ export function ChatPage() {
           type: msg.type,
           content: msg.content || ' ',
           image: msg.image || '',
+          chartCode: msg.chartCode || '',
           timestamp: msg.timestamp.toISOString(),
         }),
       });
@@ -172,6 +244,7 @@ export function ChatPage() {
           timestamp: new Date(msg.timestamp),
           hasImage: msg.hasImage || false,
           imageLoading: false,
+          chartCode: msg.chartCode || undefined,
         }));
       }
       return [];
@@ -643,6 +716,7 @@ export function ChatPage() {
         timestamp: new Date(),
         image: payload.image || undefined,
         hasImage: !!payload.image,
+        chartCode: payload.chart_code || undefined,
       };
 
       const finalMessages = [...updatedMessages, assistantMessage];
@@ -745,6 +819,36 @@ export function ChatPage() {
     }
     .hidden-scrollbar::-webkit-scrollbar {
       display: none; /* Chrome/Safari */
+    }
+
+    .fixed-scroll-track {
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      z-index: 50;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .fixed-scroll-thumb {
+      position: absolute;
+      right: 0;
+      width: 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.18);
+      transition: background 0.2s, opacity 0.3s;
+      opacity: 0.6;
+      cursor: grab;
+      pointer-events: auto;
+    }
+    .fixed-scroll-thumb:hover,
+    .fixed-scroll-thumb:active {
+      background: rgba(255,255,255,0.35);
+      opacity: 1;
+    }
+    .fixed-scroll-thumb:active {
+      cursor: grabbing;
     }
 
     @keyframes slideIn {
@@ -873,77 +977,137 @@ export function ChatPage() {
 
           {/* Compact bar when chat is active */}
           {isChatActive ? (
-            <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 backdrop-blur-md shadow-lg">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-amber-500/30 shadow-lg">
-                  <FileText className="w-4 h-4 text-amber-300" />
-                </div>
-                <div className="text-white text-sm">
-                  {selectionMode === 'files' && selectedFile && (
-                    <span><strong>{selectedFile.filename}</strong> • {selectedFile.institution}</span>
-                  )}
-                  {selectionMode === 'institutions' && selectedInstitution && (
-                    <span><strong>{selectedInstitution}</strong> • {selectedFileIds.size} arquivo(s)</span>
-                  )}
+            <div className="relative">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 backdrop-blur-md shadow-lg">
+                {/* Clickable file selector */}
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center space-x-3 hover:bg-white/5 rounded-lg px-2 py-1 -mx-1 transition-all duration-200 group"
+                >
+                  <div className="p-2 rounded-lg bg-amber-500/30 shadow-lg group-hover:bg-amber-500/40 transition-colors">
+                    <FileText className="w-4 h-4 text-amber-300" />
+                  </div>
+                  <div className="text-white text-sm text-left">
+                    {selectionMode === 'files' && selectedFile && (
+                      <span><strong>{selectedFile.filename}</strong> • {selectedFile.institution}</span>
+                    )}
+                    {selectionMode === 'institutions' && selectedInstitution && (
+                      <span><strong>{selectedInstitution}</strong> • {selectedFileIds.size} arquivo(s)</span>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-white/60 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                <div className="flex items-center space-x-3">
+                  {/* Compact Model Selector */}
+                  <div className="relative" ref={modelDropdownRef}>
+                    <button
+                      onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-transparent hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 flex items-center space-x-1.5"
+                    >
+                      <span className="text-white/60">Modelo:</span>
+                      <span className="text-amber-300 font-medium">{selectedModel}</span>
+                      <ChevronDown className={`w-3 h-3 text-white/60 transition-transform duration-300 ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isModelDropdownOpen && (
+                      <div className="absolute z-10 right-0 mt-2 w-56 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl overflow-hidden dropdown-enter">
+                        <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                          {AVAILABLE_MODELS.map((model, index) => (
+                            <button
+                              key={model}
+                              onClick={() => {
+                                setSelectedModel(model);
+                                setIsModelDropdownOpen(false);
+                              }}
+                              className={`w-full p-3 text-left hover:bg-amber-50 transition-all duration-200 flex items-center justify-between ${selectedModel === model ? 'bg-amber-100' : ''} ${index !== 0 ? 'border-t border-gray-100' : ''}`}
+                            >
+                              <span className="font-medium text-gray-900 text-sm">{model}</span>
+                              {selectedModel === model && (
+                                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleOpenPreview}
+                    disabled={getPreviewFiles().length === 0}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-transparent hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-white/80 hover:text-white transition-all duration-200 flex items-center space-x-1.5"
+                    title="Pré-visualizar arquivo"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Prévia</span>
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                {/* Compact Model Selector */}
-                <div className="relative" ref={modelDropdownRef}>
-                  <button
-                    onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                    className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 flex items-center space-x-1.5"
-                  >
-                    <span className="text-white/60">Modelo:</span>
-                    <span className="text-amber-300 font-medium">{selectedModel}</span>
-                    <ChevronDown className={`w-3 h-3 text-white/60 transition-transform duration-300 ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
 
-                  {isModelDropdownOpen && (
-                    <div className="absolute z-10 right-0 mt-2 w-56 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl overflow-hidden dropdown-enter">
-                      <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                        {AVAILABLE_MODELS.map((model, index) => (
+              {/* Inline file/institution dropdown (opens over chat) */}
+              {isDropdownOpen && (
+                <div className="absolute z-10 w-full mt-2 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl overflow-hidden dropdown-enter">
+                  <div className="max-h-72 overflow-y-auto custom-scrollbar">
+                    {selectionMode === 'files' ? (
+                      files.length === 0 ? (
+                        <div className="p-4 text-center text-gray-600 font-medium">
+                          Nenhum arquivo disponível
+                        </div>
+                      ) : (
+                        files.map((file, index) => (
                           <button
-                            key={model}
-                            onClick={() => {
-                              setSelectedModel(model);
-                              setIsModelDropdownOpen(false);
-                            }}
-                            className={`w-full p-3 text-left hover:bg-amber-50 transition-all duration-200 flex items-center justify-between ${selectedModel === model ? 'bg-amber-100' : ''} ${index !== 0 ? 'border-t border-gray-100' : ''}`}
+                            key={file.id}
+                            onClick={() => handleFileSelect(file)}
+                            className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 flex items-center space-x-3 group ${selectedFile?.id === file.id ? 'bg-amber-100' : ''
+                              } ${index !== 0 ? 'border-t border-gray-100' : ''}`}
                           >
-                            <span className="font-medium text-gray-900 text-sm">{model}</span>
-                            {selectedModel === model && (
+                            <div className={`p-2 rounded-lg transition-colors ${selectedFile?.id === file.id
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-gray-100 text-gray-600 group-hover:bg-amber-100'
+                              }`}>
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-gray-900 truncate">
+                                {file.filename}
+                              </div>
+                              <div className="text-sm text-gray-500 truncate">
+                                {file.institution} • {file.writer}
+                              </div>
+                            </div>
+                            {selectedFile?.id === file.id && (
                               <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
                             )}
                           </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                        ))
+                      )
+                    ) : (
+                      getInstitutions().length === 0 ? (
+                        <div className="p-4 text-center text-gray-600 font-medium">
+                          Nenhuma instituição disponível
+                        </div>
+                      ) : (
+                        getInstitutions().map((institution, index) => (
+                          <div key={institution} className={index !== 0 ? 'border-t border-gray-100' : ''}>
+                            <button
+                              onClick={() => handleInstitutionSelect(institution)}
+                              className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 ${selectedInstitution === institution ? 'bg-amber-50' : ''
+                                }`}
+                            >
+                              <div className="font-medium text-gray-900">{institution}</div>
+                              <div className="text-sm text-gray-500">
+                                {getFilesForInstitution(institution).length} arquivo(s)
+                              </div>
+                            </button>
+                          </div>
+                        ))
+                      )
+                    )}
+                  </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setMessages([]);
-                    setSelectedFile(null);
-                    setSelectedInstitution(null);
-                    setSelectedFileIds(new Set());
-                    setIsPreviewOpen(false);
-                    setPreviewFileId(null);
-                  }}
-                  className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 "
-                >
-                  Trocar arquivo
-                </button>
-                <button
-                  onClick={handleOpenPreview}
-                  disabled={getPreviewFiles().length === 0}
-                  className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-white/80 hover:text-white transition-all duration-200 flex items-center space-x-1.5"
-                  title="Pré-visualizar arquivo"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Prévia</span>
-                </button>
-              </div>
+              )}
             </div>
           ) : (
             <>
@@ -1198,7 +1362,7 @@ export function ChatPage() {
                 aria-label="Limpar histórico"
                 title="Limpar histórico"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -1230,9 +1394,9 @@ export function ChatPage() {
                       }`}
                   >
                     {message.content && (
-                    <div className={`prose prose-sm max-w-none prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 ${message.type === 'user' ? 'whitespace-pre-wrap' : ''} ${message.type === 'assistant' ? 'prose-p:text-white/90 prose-headings:text-white prose-strong:text-white prose-li:text-white/90 leading-normal' : 'leading-relaxed'}`}>
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    </div>
+                      <div className={`prose prose-sm max-w-none prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 ${message.type === 'user' ? 'whitespace-pre-wrap' : ''} ${message.type === 'assistant' ? 'prose-p:text-white/90 prose-headings:text-white prose-strong:text-white prose-li:text-white/90 leading-normal' : 'leading-relaxed'}`}>
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
                     )}
                     {message.imageLoading && (
                       <div className="mt-3 flex items-center space-x-2 text-white/60 text-sm">
@@ -1241,34 +1405,103 @@ export function ChatPage() {
                       </div>
                     )}
                     {message.image && !message.imageLoading && (
-                      <div className={`${message.content ? 'mt-3' : ''} relative group inline-block cursor-pointer overflow-hidden rounded-lg`} onClick={() => setAmplifiedImage(message.image!)}>
-                        <img
-                          src={message.image.startsWith('data:') ? message.image : `data:image/png;base64,${message.image}`}
-                          alt="Generated visualization"
-                          className="max-w-full h-auto shadow-lg"
-                        />
-                        {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                          <Search className="w-8 h-8 text-white/80 drop-shadow-lg" />
-                        </div>
+                      <div className={`${message.content ? 'mt-3' : ''}`}>
+                        {/* See Code Button & Panel */}
+                        {message.chartCode && (
+                          <div className="mb-2">
+                            <button
+                              onClick={() => {
+                                setExpandedCodeMsgIds(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(message.id)) {
+                                    next.delete(message.id);
+                                  } else {
+                                    next.add(message.id);
+                                  }
+                                  return next;
+                                });
+                              }}
+                              className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-200"
+                            >
+                              <Code className="w-3.5 h-3.5" />
+                              <span>{expandedCodeMsgIds.has(message.id) ? 'Ocultar código' : 'Ver código'}</span>
+                            </button>
 
-                        {/* Action Buttons (Bottom Left) */}
-                        <div className="absolute bottom-3 left-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDownloadImage(message.image!); }}
-                            className="p-2 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-md shadow-lg transition-all hover:-translate-y-0.5"
-                            title="Baixar imagem"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); saveToGallery(message.image!); }}
-                            className="p-2 bg-amber-500/80 hover:bg-amber-600 text-white rounded-lg backdrop-blur-md shadow-lg transition-all flex items-center space-x-2 hover:scale-105"
-                            title="Enviar para galeria"
-                          >
-                            <ImagePlus className="w-4 h-4" />
-                            <span className="text-xs font-medium">Salvar</span>
-                          </button>
+                            {expandedCodeMsgIds.has(message.id) && (
+                              <div className="mt-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+                                {/* Code Header */}
+                                <div className="flex items-center justify-between px-3 py-2 bg-white/5 border-b border-white/10">
+                                  <span className="text-xs text-white/50 font-medium">Python</span>
+                                  <div className="flex items-center space-x-1">
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(message.chartCode!);
+                                        setCopiedMsgId(message.id);
+                                        setTimeout(() => setCopiedMsgId(null), 2000);
+                                      }}
+                                      className="inline-flex items-center space-x-1 px-2 py-1 rounded text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                      title="Copiar código"
+                                    >
+                                      {copiedMsgId === message.id ? (
+                                        <><CheckCheck className="w-3.5 h-3.5 text-green-400" /><span className="text-green-400">Copiado!</span></>
+                                      ) : (
+                                        <><Copy className="w-3.5 h-3.5" /><span>Copiar</span></>
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setExpandedCodeMsgIds(prev => {
+                                          const next = new Set(prev);
+                                          next.delete(message.id);
+                                          return next;
+                                        });
+                                      }}
+                                      className="p-1 rounded text-white/40 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                      title="Fechar"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                                {/* Code Content */}
+                                <pre className="px-4 py-3 overflow-x-auto text-xs leading-relaxed text-emerald-300/90 font-mono">
+                                  <code>{message.chartCode}</code>
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Chart Image */}
+                        <div className="relative group inline-block cursor-pointer overflow-hidden rounded-lg" onClick={() => setAmplifiedImage(message.image!)}>
+                          <img
+                            src={message.image.startsWith('data:') ? message.image : `data:image/png;base64,${message.image}`}
+                            alt="Generated visualization"
+                            className="max-w-full h-auto shadow-lg"
+                          />
+                          {/* Hover Overlay */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                            <Search className="w-8 h-8 text-white/80 drop-shadow-lg" />
+                          </div>
+
+                          {/* Action Buttons (Bottom Left) */}
+                          <div className="absolute bottom-3 left-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDownloadImage(message.image!); }}
+                              className="p-2 bg-black/60 hover:bg-black/80 text-white rounded-lg backdrop-blur-md shadow-lg transition-all hover:-translate-y-0.5"
+                              title="Baixar imagem"
+                            >
+                              <Download className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); saveToGallery(message.image!); }}
+                              className="p-2 bg-amber-500/80 hover:bg-amber-600 text-white rounded-lg backdrop-blur-md shadow-lg transition-all flex items-center space-x-2 hover:scale-105"
+                              title="Enviar para galeria"
+                            >
+                              <ImagePlus className="w-4 h-4" />
+                              <span className="text-xs font-medium">Salvar</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1339,13 +1572,14 @@ export function ChatPage() {
               <div className="relative">
                 <button
                   onClick={() => setIsToolsDropdownOpen((prev) => !prev)}
-                  className="flex items-center space-x-1.5 bg-transparent text-white/80 hover:text-white transition-colors text-sm"
+                  className="flex rounded-lg px-3 py-1.5 text-sm items-center space-x-1.5 bg-transparent hover:bg-gray-400/20 text-white/80"
                   disabled={isLoading}
                 >
-                  <Wrench className="w-4 h-4" />
                   <span>Ferramentas</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isToolsDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4.5 h-4.5 transition-transform duration-200 ${isToolsDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
+
+
 
                 {isToolsDropdownOpen && (
                   <div className="absolute left-0 bottom-8 min-w-52 rounded-lg border border-white/15 bg-black/90 backdrop-blur-md shadow-2xl overflow-hidden">
@@ -1354,11 +1588,10 @@ export function ChatPage() {
                         setIsToolsDropdownOpen(false);
                         setImageGenSelected((prev) => !prev);
                       }}
-                      className={`w-full px-3 py-2.5 flex items-center space-x-2 text-left text-sm transition-colors ${
-                        imageGenSelected
+                      className={`w-full flex items-center space-x-2 text-left rounded-lg px-3 py-1.5 text-sm transition-colors ${imageGenSelected
                           ? 'text-amber-300 bg-amber-500/15'
                           : 'text-white/90 hover:bg-white/10'
-                      }`}
+                        }`}
                     >
                       <Image className="w-4 h-4 text-amber-400" />
                       <span>Geração de imagem</span>
@@ -1371,7 +1604,7 @@ export function ChatPage() {
               </div>
 
               {imageGenSelected && (
-                <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-medium animate-[fadeIn_0.2s_ease-out]">
+                <div className="flex items-center rounded-lg px-3 py-1.5 text-sm bg-amber-500/20  text-amber-300 text-sm font-medium animate-[fadeIn_0.2s_ease-out] gap-1">
                   <Image className="w-3 h-3" />
                   <span>Geração de imagem</span>
                   <button
@@ -1397,13 +1630,24 @@ export function ChatPage() {
                 className="w-11 h-11 bg-transparent disabled:opacity-40 disabled:cursor-not-allowed text-white/90 hover:text-white rounded-full transition-all duration-200 flex items-center justify-center relative group"
                 title="Enviar"
               >
-                <span className="absolute inset-0 m-auto w-8 h-8 rounded-full bg-amber-400/20 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200"></span>
+                <span className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-gray-400/20 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200"></span>
                 <Send className="w-5 h-5 relative z-10" />
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Fixed right-edge scrollbar */}
+      {scrollThumb.visible && (
+        <div className="fixed-scroll-track" onClick={handleTrackClick}>
+          <div
+            className="fixed-scroll-thumb"
+            style={{ top: `${scrollThumb.top}%`, height: `${scrollThumb.height}%` }}
+            onMouseDown={handleScrollbarDrag}
+          />
+        </div>
+      )}
 
       {/* Chart Guide Popup */}
       <ChartGuidePopup
