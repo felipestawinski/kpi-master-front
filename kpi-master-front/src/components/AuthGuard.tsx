@@ -122,7 +122,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#0f172a]/90 backdrop-blur-sm"
+        className="absolute inset-0 bg-zinc-900/90 backdrop-blur-sm"
         style={{ animation: 'authFadeIn 0.3s ease-out forwards' }}
       />
 

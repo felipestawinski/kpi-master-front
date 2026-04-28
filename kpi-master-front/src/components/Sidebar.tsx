@@ -9,6 +9,7 @@ import { MdOutlineManageSearch } from "react-icons/md";
 import { IoDocumentSharp } from "react-icons/io5";
 import { PiUsersFill } from "react-icons/pi";
 import { MdPhotoLibrary } from "react-icons/md";
+import { MdOutlineExplore } from "react-icons/md";
 import { MdLogout } from "react-icons/md";
 import { IoChatbox } from "react-icons/io5";
 import { HiMenu } from 'react-icons/hi';
@@ -21,17 +22,25 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { isLoading, startLoading, stopLoading } = useLoading();
   const prevPathnameRef = useRef(pathname);
+  const stopLoadingRef = useRef(stopLoading);
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Keep the ref in sync with the latest stopLoading without adding it as a dep
+  useEffect(() => {
+    stopLoadingRef.current = stopLoading;
+  });
 
   useEffect(() => {
     // Only stop loading if pathname actually changed
     if (prevPathnameRef.current !== pathname) {
-      stopLoading();
+      stopLoadingRef.current();
       prevPathnameRef.current = pathname;
     }
-  }, [pathname, stopLoading]);
+  }, [pathname]);
 
   const handleNavigation = (route: string) => {
+    // Don't start loading if we're already on this route
+    if (pathname === route) return;
     startLoading();
     router.push(route);
   };
@@ -111,10 +120,10 @@ export default function Sidebar() {
 
       <div
         style={{
-          width: isCollapsed ? '5rem' : '16rem',
+          width: isCollapsed ? '5rem' : '18rem',
           transition: 'width 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
-        className="relative text-gray-300 flex flex-col justify-between pt-6 text-sm z-40 bg-zinc-900/90 border-r border-zinc-700/40"
+        className="relative text-gray-300 flex flex-col justify-between pt-6 text-sm z-40 bg-zinc-800/90 border-r border-zinc-700/40"
       >
         <div className="text-gray-300 flex flex-col">
           {/* Menu toggle button */}
@@ -141,7 +150,8 @@ export default function Sidebar() {
           {renderNavItem('/upload', 'Enviar documentos', IoDocumentSharp, 'upload', 2)}
           {renderNavItem('/users', 'Gerenciar usuários', PiUsersFill, 'users', 3)}
           {renderNavItem('/statistics', 'Galeria', MdPhotoLibrary, undefined, 4)}
-          {renderNavItem('/chat', 'Chat', IoChatbox, 'chat', 5)}
+          {renderNavItem('/explore', 'Explorar', MdOutlineExplore, undefined, 5)}
+          {renderNavItem('/chat', 'Chat', IoChatbox, 'chat', 6)}
         </div>
 
         {/* Bottom section with divider */}

@@ -72,7 +72,7 @@ export default function TokenUsageBar() {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className="relative overflow-hidden rounded-full border border-white/10 backdrop-blur-xl shadow-2xl"
+        className="relative overflow-hidden rounded-full border border-white/10 backdrop-blur-xl"
         style={{
           background: 'rgba(0, 0, 0, 0.45)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -166,7 +166,7 @@ export default function TokenUsageBar() {
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
             <span className="text-xs font-semibold text-white/80">
-              Uso de Tokens Premium
+              Consumo de Tokens
             </span>
           </div>
           <div className="space-y-1">
@@ -193,7 +193,7 @@ export default function TokenUsageBar() {
             className="w-full h-0.5 rounded-full"
             style={{ background: 'rgba(255, 255, 255, 0.06)' }}
           />
-          <p className="text-[10px] text-white/30 leading-relaxed">
+          <p className="text-[11px] text-white/30 leading-relaxed">
             {percentage < 85
               ? 'Seus tokens são consumidos a cada solicitação de análise.'
               : '⚠️ Você está próximo do limite de tokens.'}

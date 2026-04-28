@@ -6,49 +6,49 @@ import { LoadingProvider } from '@/components/hooks/useLoading';
 
 const inter = Inter({ subsets: ['latin'] })
 // or
-const roboto = Roboto({ 
- subsets: ['latin'],
- weight: ['300', '400', '500', '700']
+const roboto = Roboto({
+    subsets: ['latin'],
+    weight: ['300', '400', '500', '700']
 })
 // or
 const poppins = Poppins({
- subsets: ['latin'],
- weight: ['300', '400', '500', '600', '700']
+    subsets: ['latin'],
+    weight: ['300', '400', '500', '600', '700']
 })
 
 const geistSans = Geist({
- variable: "--font-geist-sans",
- subsets: ["latin"],
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
- variable: "--font-geist-mono",
- subsets: ["latin"],
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
- title: "KPI App",
- description: "KPI Application",
- icons: [
-  {
-   url: '/favicon.ico',
-  },
- ],
+    title: "KPI App",
+    description: "KPI Application",
+    icons: [
+        {
+            url: '/favicon.ico',
+        },
+    ],
 };
 
 
 export default function RootLayout({
- children,
+    children,
 }: Readonly<{
- children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
- return (
-  <html lang="en">
-   <body className={roboto.className}>
-    <LoadingProvider>
-     {children}
-    </LoadingProvider>
-   </body>
-  </html>
- );
+    return (
+        <html lang="en">
+            <body className={roboto.className}>
+                <LoadingProvider>
+                    {children}
+                </LoadingProvider>
+            </body>
+        </html>
+    );
 }

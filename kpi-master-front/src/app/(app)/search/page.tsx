@@ -267,6 +267,26 @@ export function SearchPage() {
     .dropdown-enter {
      animation: slideIn 0.2s ease-out;
     }
+
+    .dropdown-scrollbar {
+     overflow-y: auto;
+     scrollbar-width: thin;
+     scrollbar-color: rgba(255,255,255,0.88);
+    }
+    .dropdown-scrollbar::-webkit-scrollbar {
+     width: 6px;
+    }
+    .dropdown-scrollbar::-webkit-scrollbar-track {
+     background: transparent;
+    }
+    .dropdown-scrollbar::-webkit-scrollbar-thumb {
+     background: rgba(255,255,255,0.88);
+     border-radius: 4px;
+     transition: background 0.2s;
+    }
+    .dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+     background: rgba(255,255,255,0.85);
+    }
    `}</style>
 
    <div className="mx-auto max-w-7xl">
@@ -305,8 +325,8 @@ export function SearchPage() {
         </button>
 
         {isDropdownOpen && (
-         <div className="absolute z-50 w-full mt-2 rounded-xl bg-white/98 backdrop-blur-sm shadow-2xl overflow-hidden dropdown-enter">
-          <div className="max-h-96 overflow-y-auto custom-scrollbar">
+         <div className="absolute z-50 w-full mt-2 rounded-xl bg-zinc-800 shadow-2xl overflow-hidden dropdown-enter">
+          <div className="max-h-96 dropdown-scrollbar">
            {SEARCH_TYPE_OPTIONS.map((option, index) => (
             <button
              key={option.value}
@@ -314,17 +334,17 @@ export function SearchPage() {
               setSearchType(option.value);
               setIsDropdownOpen(false);
              }}
-             className={`w-full p-4 text-left hover:bg-amber-50 transition-all duration-200 flex items-center space-x-3 group ${searchType === option.value ? 'bg-amber-100' : ''
-              } ${index !== 0 ? 'border-t border-gray-100' : ''}`}
+             className={`w-full p-4 text-left hover:bg-white/10 transition-all duration-200 flex items-center space-x-3 group ${searchType === option.value ? 'bg-amber-500/20' : ''
+              } ${index !== 0 ? 'border-t border-white/10' : ''}`}
             >
              <div className={`p-2 rounded-lg transition-colors ${searchType === option.value
               ? 'bg-amber-500 text-white'
-              : 'bg-gray-100 text-gray-600 group-hover:bg-amber-100'
+              : 'bg-white/10 text-gray-300 group-hover:bg-amber-500/30'
               }`}>
               {option.icon}
              </div>
              <div className="flex-1 min-w-0">
-              <div className="font-medium text-gray-900 truncate">
+              <div className="font-medium text-gray-300 truncate">
                {option.label}
               </div>
              </div>
@@ -367,7 +387,7 @@ export function SearchPage() {
         <button
          onClick={handleSearch}
          disabled={isSearching}
-         className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-2xl hover:shadow-amber-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 group"
+         className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-xl shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 group"
         >
          <SearchIcon className={`w-4 h-4 ${isSearching ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
          <span>{isSearching ? 'Buscando...' : 'Buscar'}</span>

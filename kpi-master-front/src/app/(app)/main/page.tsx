@@ -70,7 +70,7 @@ export default function MainPage() {
             <div className="relative z-10 flex-1 flex flex-col">
 
                 {/* Greeting section */}
-                <div className="relative overflow-hidden bg-zinc-900/90 -mx-11 -mt-11">
+                <div className="relative overflow-hidden bg-zinc-800/90 -mx-11 -mt-11">
 
 
                     {/* Greeting text */}
@@ -94,7 +94,7 @@ export default function MainPage() {
 
                         {/* BIG — Chat IA (left half, spans 2 rows) */}
                         <div
-                            className={`group relative col-span-2 row-span-2 overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 ease-out
+                            className={`group relative col-span-2 row-span-2 overflow-hidden rounded-2xl cursor-pointer transition-all duration-200 ease-out
                                 bg-zinc-800/90
                                 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
                             `}
@@ -104,12 +104,12 @@ export default function MainPage() {
                             {/* Background icon */}
                             <IoChatbox
                                 size={160}
-                                className="absolute -top-8 -right-8 text-zinc-700/20 group-hover:text-amber-500/15 group-hover:scale-110 transition-all duration-500 pointer-events-none"
+                                className="absolute -top-8 -right-8 text-zinc-600/20 group-hover:text-amber-500/15 group-hover:scale-110 transition-all duration-200 pointer-events-none"
                             />
 
                             <button className="relative z-10 flex flex-col justify-end h-full w-full p-7 text-left">
                                 <div>
-                                    <span className="block text-2xl font-semibold text-gray-400 group-hover:text-white transition-colors duration-300">
+                                    <span className="block text-2xl font-semibold text-gray-400 group-hover:text-white transition-colors duration-200">
                                         Chat IA
                                     </span>
                                 </div>
@@ -118,7 +118,7 @@ export default function MainPage() {
 
                         {/* MEDIUM — Pesquisar (right-upper, spans 2 cols × 1 row) */}
                         <div
-                            className={`group relative col-span-2 row-span-1 overflow-hidden rounded-2xl cursor-pointer transition-all duration-500 ease-out
+                            className={`group relative col-span-2 row-span-1 overflow-hidden rounded-2xl cursor-pointer transition-all duration-200 ease-out
                                 bg-zinc-800/90
                                 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
                             `}
@@ -128,11 +128,11 @@ export default function MainPage() {
                             {/* Background icon */}
                             <MdOutlineManageSearch
                                 size={120}
-                                className="absolute -top-6 -right-6 text-zinc-700/20 group-hover:text-amber-500/15 group-hover:scale-110 transition-all duration-500 pointer-events-none"
+                                className="absolute -top-6 -right-6 text-zinc-600/20 group-hover:text-amber-500/15 group-hover:scale-110 transition-all duration-200 pointer-events-none"
                             />
 
                             <button className="relative z-10 flex flex-col justify-end h-full w-full px-6 py-5 text-left">
-                                <span className="block text-xl font-semibold text-gray-400 group-hover:text-white transition-colors duration-300">
+                                <span className="block text-xl font-semibold text-gray-400 group-hover:text-white transition-colors duration-200">
                                     Pesquisar
                                 </span>
                             </button>
@@ -150,11 +150,11 @@ export default function MainPage() {
                             {/* Background icon */}
                             <AiOutlineCloudUpload
                                 size={102}
-                                className="absolute -top-5 -right-5 text-zinc-700/20 group-hover:text-amber-500/15 group-hover:scale-110 transition-all duration-500 pointer-events-none"
+                                className="absolute -top-5 -right-5 text-zinc-600/20 group-hover:text-amber-500/15 group-hover:scale-110 transition-all duration-200 pointer-events-none"
                             />
 
                             <button className="relative z-10 flex flex-col justify-end h-full w-full p-4 text-left">
-                                <span className="text-lg font-semibold text-gray-400 group-hover:text-white transition-colors duration-300">
+                                <span className="text-lg font-semibold text-gray-400 group-hover:text-white transition-colors duration-200">
                                     Upload
                                 </span>
                             </button>
@@ -162,7 +162,7 @@ export default function MainPage() {
 
                         {/* SMALL — Galeria (right-bottom-right) */}
                         <div
-                            className={`group relative col-span-1 row-span-1 overflow-hidden rounded-xl cursor-pointer transition-all duration-500 ease-out
+                            className={`group relative col-span-1 row-span-1 overflow-hidden rounded-xl cursor-pointer transition-all duration-200 ease-out
                                 bg-zinc-800/90
                                 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
                             `}
@@ -172,11 +172,11 @@ export default function MainPage() {
                             {/* Background icon */}
                             <MdPhotoLibrary
                                 size={92}
-                                className="absolute -top-4 -right-4 text-zinc-700/20 group-hover:text-amber-500/15 group-hover:scale-110 transition-all duration-500 pointer-events-none"
+                                className="absolute -top-4 -right-4 text-zinc-600/20 group-hover:text-amber-500/15 group-hover:scale-110 transition-all duration-200 pointer-events-none"
                             />
 
                             <button className="relative z-10 flex flex-col justify-end h-full w-full p-4 text-left">
-                                <span className="text-lg font-semibold text-gray-400 group-hover:text-white transition-colors duration-300">
+                                <span className="text-lg font-semibold text-gray-400 group-hover:text-white transition-colors duration-200">
                                     Galeria
                                 </span>
                             </button>

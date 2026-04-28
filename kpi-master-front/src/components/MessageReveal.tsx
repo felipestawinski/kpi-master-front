@@ -4,17 +4,22 @@ interface MessageRevealProps {
   children: ReactNode;
   scrollContainerRef?: RefObject<HTMLElement | null>;
   className?: string;
+  /** When false (default for history), skip the reveal animation and render instantly */
+  animate?: boolean;
 }
 
 const MessageReveal: React.FC<MessageRevealProps> = ({
   children,
   scrollContainerRef,
   className = '',
+  animate = false,
 }) => {
   const elRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(!animate);
 
   useEffect(() => {
+    if (!animate) return; // Skip observer entirely for historical messages
+
     const el = elRef.current;
     if (!el) return;
 
@@ -39,17 +44,17 @@ const MessageReveal: React.FC<MessageRevealProps> = ({
     return () => {
       observer.disconnect();
     };
-  }, [scrollContainerRef]);
+  }, [animate, scrollContainerRef]);
 
   return (
     <div
       ref={elRef}
       className={className}
-      style={{
+      style={animate ? {
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(12px)',
         transition: 'opacity 0.4s ease-out, transform 0.4s ease-out',
-      }}
+      } : undefined}
     >
       {children}
     </div>

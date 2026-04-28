@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
  }, []);
 
  return (
-    <div className="min-h-screen flex relative bg-[#0b0b0d]">
+    <div className="h-screen flex overflow-hidden relative bg-[#161619]">
 
    <Sidebar />
 
@@ -30,7 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
    )}
 
    {/* Main content area */}
-   <main className="relative z-10 flex-1">
+   <main className="relative z-10 flex-1 h-full overflow-hidden">
     {children}
    </main>
 
