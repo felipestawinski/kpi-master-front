@@ -209,6 +209,9 @@ function ChatPage() {
       // Skip if inside a separately-scrollable element (dropdowns, etc.)
       if (target.closest('.dropdown-scrollbar')) return;
 
+      // Prevent the browser from also scrolling / pull-to-refreshing the page
+      e.preventDefault();
+
       const maxScroll = el.scrollHeight - el.clientHeight;
       targetScrollTop = Math.min(Math.max(targetScrollTop + e.deltaY, 0), maxScroll);
 
@@ -225,7 +228,7 @@ function ChatPage() {
       }
     };
 
-    document.addEventListener('wheel', onWheel, { passive: true });
+    document.addEventListener('wheel', onWheel, { passive: false });
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       document.removeEventListener('wheel', onWheel);
@@ -873,7 +876,7 @@ function ChatPage() {
   };
 
   return (
-    <div className="p-6 h-screen flex flex-col overflow-hidden">
+    <div className="p-6 h-screen flex flex-col overflow-hidden" style={{ overscrollBehavior: 'none', touchAction: 'pan-x pinch-zoom' }}>
       <style jsx global>{`
     .hidden-scrollbar {
       overflow-y: hidden;
@@ -1431,7 +1434,7 @@ function ChatPage() {
             </div>
           )}
 
-          <div ref={messagesScrollRef} className="h-full px-2 pt-10 pb-8 space-y-4 hidden-scrollbar">
+          <div ref={messagesScrollRef} className="h-full px-2 pt-10 pb-8 space-y-4 hidden-scrollbar" style={{ overscrollBehavior: 'none' }}>
             {messages.length === 0 ? (
               <div className="text-center text-white py-12">
                 <div className="mb-4 inline-block p-4 rounded-full bg-white/10 backdrop-blur-sm shadow-lg">

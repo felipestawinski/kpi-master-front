@@ -144,7 +144,7 @@ export default function LoginPage() {
       {/* Success overlay */}
       {showSuccess && (
         <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-zinc-800 border border-zinc-700 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4"
+          <div className="bg-zinc-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4"
                style={{ animation: 'popIn 0.3s ease-out' }}>
             <div className="w-14 h-14 rounded-full bg-green-500/15 flex items-center justify-center">
               <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
