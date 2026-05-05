@@ -89,6 +89,8 @@ function ChatPage() {
   const scrollThumbRef = useRef<HTMLDivElement>(null);
   // Track whether we are restoring history so scrollToBottom uses instant jump
   const isLoadingHistory = useRef(false);
+  // Shared ref so scrollToBottom can sync with the wheel handler's target
+  const wheelTargetScrollTop = useRef(0);
 
   // Auto-hide toast after 3s
   useEffect(() => {
@@ -104,8 +106,19 @@ function ChatPage() {
   const isChatActive = messages.length > 0 || isLoading;
 
   const scrollToBottom = () => {
-    const behavior = isLoadingHistory.current ? 'instant' : 'smooth';
-    messagesEndRef.current?.scrollIntoView({ behavior: behavior as ScrollBehavior });
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    // Wait a frame so the DOM has rendered the new messages
+    requestAnimationFrame(() => {
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      if (isLoadingHistory.current) {
+        el.scrollTop = maxScroll;
+      } else {
+        el.scrollTo({ top: maxScroll, behavior: 'smooth' });
+      }
+      // Keep the wheel handler's target in sync
+      wheelTargetScrollTop.current = maxScroll;
+    });
   };
 
   useEffect(() => {
@@ -188,15 +201,15 @@ function ChatPage() {
     const el = messagesScrollRef.current;
     if (!el) return;
 
-    let targetScrollTop = el.scrollTop;
+    wheelTargetScrollTop.current = el.scrollTop;
     let animating = false;
     const LERP = 0.18; // damping factor – lower = smoother/slower, higher = snappier
     const EPSILON = 0.5; // stop animating when close enough (px)
 
     const animate = () => {
-      const diff = targetScrollTop - el.scrollTop;
+      const diff = wheelTargetScrollTop.current - el.scrollTop;
       if (Math.abs(diff) < EPSILON) {
-        el.scrollTop = targetScrollTop;
+        el.scrollTop = wheelTargetScrollTop.current;
         animating = false;
         return;
       }
@@ -206,14 +219,14 @@ function ChatPage() {
 
     const onWheel = (e: WheelEvent) => {
       const target = e.target as HTMLElement;
-      // Skip if inside a separately-scrollable element (dropdowns, etc.)
-      if (target.closest('.dropdown-scrollbar')) return;
+      // Skip if inside a separately-scrollable element (dropdowns, preview panel, etc.)
+      if (target.closest('.dropdown-scrollbar') || target.closest('.file-preview-panel')) return;
 
       // Prevent the browser from also scrolling / pull-to-refreshing the page
       e.preventDefault();
 
       const maxScroll = el.scrollHeight - el.clientHeight;
-      targetScrollTop = Math.min(Math.max(targetScrollTop + e.deltaY, 0), maxScroll);
+      wheelTargetScrollTop.current = Math.min(Math.max(wheelTargetScrollTop.current + e.deltaY, 0), maxScroll);
 
       if (!animating) {
         animating = true;
@@ -221,10 +234,10 @@ function ChatPage() {
       }
     };
 
-    // Keep targetScrollTop in sync when user scrolls natively (e.g. drag scrollbar thumb)
+    // Keep wheelTargetScrollTop in sync when user scrolls natively (e.g. drag scrollbar thumb, scrollToBottom)
     const onScroll = () => {
       if (!animating) {
-        targetScrollTop = el.scrollTop;
+        wheelTargetScrollTop.current = el.scrollTop;
       }
     };
 
@@ -441,7 +454,7 @@ function ChatPage() {
     setPreviewRows([]);
 
     try {
-      const response = await fetch('http://localhost:8080/file-preview', {
+      const response = await fetch('http://localhost:8080/file-preview-cached', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -449,8 +462,6 @@ function ChatPage() {
         },
         body: JSON.stringify({
           fileId,
-          maxRows: 20,
-          maxCols: 12,
         }),
       });
 
@@ -876,7 +887,7 @@ function ChatPage() {
   };
 
   return (
-    <div className="p-6 h-screen flex flex-col overflow-hidden" style={{ overscrollBehavior: 'none', touchAction: 'pan-x pinch-zoom' }}>
+    <div className="h-screen flex flex-row overflow-hidden" style={{ overscrollBehavior: 'none', touchAction: 'pan-x pinch-zoom' }}>
       <style jsx global>{`
     .hidden-scrollbar {
       overflow-y: hidden;
@@ -1018,8 +1029,62 @@ function ChatPage() {
       max-height: 60px;
      }
     }
+
+    /* ── File Preview Side Panel ── */
+    .file-preview-panel {
+      position: relative;
+      flex-shrink: 0;
+      width: 0;
+      min-width: 0;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(16px);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  min-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.25s ease;
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .file-preview-panel--open {
+      width: 55vw;
+      min-width: 420px;
+      opacity: 1;
+      overflow: visible;
+    }
+
+    .preview-panel-scrollbar {
+      overflow-y: auto;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.18) transparent;
+    }
+    .preview-panel-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .preview-panel-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .preview-panel-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.18);
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .preview-panel-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.35);
+    }
+
+    /* Let the browser skip rendering off-screen table rows */
+    .preview-row-virtual {
+      content-visibility: auto;
+      contain-intrinsic-block-size: 36px;
+    }
    `}</style>
 
+      {/* ── Chat section (shrinks when preview is open) ── */}
+      <div className={`flex-1 min-w-0 p-6 flex flex-col overflow-hidden transition-all duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)]`}>
       <div className="mx-auto w-full max-w-3xl flex-1 flex flex-col min-h-0">
 
         {/* Custom File Selection Dropdown - Collapses when chat is active */}
@@ -1052,7 +1117,7 @@ function ChatPage() {
               <div className="relative" ref={modelDropdownRef}>
                 <button
                   onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                  className="px-4 py-2 rounded-xl bg-black/40 text-white backdrop-blur-md hover:bg-black/50 transition-all duration-300 flex items-center space-x-2 group shadow-xl"
+                  className="px-4 py-2 rounded-lg bg-black/40 text-white backdrop-blur-md hover:bg-black/50 transition-all duration-300 flex items-center space-x-2 group shadow-xl"
                 >
                   <span className="text-md font-medium text-white/80">Modelo:</span>
                   <span className="text-md font-medium text-amber-300">{selectedModel}</span>
@@ -1062,7 +1127,7 @@ function ChatPage() {
                 </button>
 
                 {isModelDropdownOpen && (
-                  <div className="absolute z-40 right-0 mt-2 w-56 rounded-xl bg-zinc-800 overflow-hidden dropdown-enter">
+                  <div className="absolute z-40 right-0 mt-2 w-56 rounded-lg bg-zinc-800 overflow-hidden dropdown-enter">
                     <div className="max-h-96 dropdown-scrollbar">
                       {AVAILABLE_MODELS.map((model, index) => (
                         <button
@@ -1071,7 +1136,7 @@ function ChatPage() {
                             setSelectedModel(model);
                             setIsModelDropdownOpen(false);
                           }}
-                          className={`w-full p-3 text-left hover:bg-white/10 transition-all duration-200 flex items-center justify-between ${selectedModel === model ? 'bg-amber-500/20' : ''} ${index !== 0 ? 'border-t border-white/10' : ''}`}
+                          className={`w-full p-3 text-left hover:bg-gray-500/20 flex items-center justify-between ${selectedModel === model ? 'bg-amber-500/20' : ''} ${index !== 0 ? 'border-t border-white/10' : ''}`}
                         >
                           <span className="font-medium text-gray-300 text-sm">{model}</span>
                           {selectedModel === model && (
@@ -1089,11 +1154,11 @@ function ChatPage() {
           {/* Compact bar when chat is active */}
           {isChatActive ? (
             <div className="relative">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 backdrop-blur-md shadow-lg">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-black/40 backdrop-blur-md shadow-lg">
                 {/* Clickable file selector */}
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center space-x-3 hover:bg-white/5 rounded-lg px-2 py-1 -mx-1 transition-all duration-200 group"
+                  className="flex items-center space-x-3 hover:bg-gray-500/20 rounded-lg px-2 py-1 -mx-1 group"
                 >
                   <div className="p-2 rounded-lg bg-amber-500/30 shadow-lg group-hover:bg-amber-500/40 transition-colors">
                     <FileText className="w-4 h-4 text-amber-300" />
@@ -1114,7 +1179,7 @@ function ChatPage() {
                   <div className="relative" ref={modelDropdownRef}>
                     <button
                       onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                      className="px-3 py-1.5 text-xs rounded-xl bg-transparent hover:bg-white/20 text-white/80 hover:text-white transition-all duration-200 flex items-center space-x-1.5 text-sm"
+                      className="px-3 py-1.5 text-xs rounded-lg bg-transparent hover:bg-gray-500/20 text-white/80 hover:text-white  flex items-center space-x-1.5 text-sm"
                     >
                       <span className="text-white/60 text-sm">Modelo:</span>
                       <span className="text-amber-300 font-medium text-sm">{selectedModel}</span>
@@ -1122,7 +1187,7 @@ function ChatPage() {
                     </button>
 
                     {isModelDropdownOpen && (
-                      <div className="absolute z-40 right-0 mt-2 w-56 rounded-xl bg-zinc-800 overflow-hidden dropdown-enter">
+                      <div className="absolute z-40 right-0 mt-2 w-56 rounded-lg bg-zinc-800 overflow-hidden dropdown-enter">
                         <div className="max-h-96 dropdown-scrollbar">
                           {AVAILABLE_MODELS.map((model, index) => (
                             <button
@@ -1131,7 +1196,7 @@ function ChatPage() {
                                 setSelectedModel(model);
                                 setIsModelDropdownOpen(false);
                               }}
-                              className={`w-full p-3 text-left hover:bg-white/10 transition-all duration-200 flex items-center justify-between ${selectedModel === model ? 'bg-amber-500/20' : ''} ${index !== 0 ? 'border-t border-white/10' : ''}`}
+                              className={`w-full p-3 text-left hover:bg-gray-500/20  flex items-center justify-between ${selectedModel === model ? 'bg-amber-500/20' : ''} ${index !== 0 ? 'border-t border-white/10' : ''}`}
                             >
                               <span className="font-medium text-gray-300 text-sm">{model}</span>
                               {selectedModel === model && (
@@ -1143,15 +1208,26 @@ function ChatPage() {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={handleOpenPreview}
-                    disabled={getPreviewFiles().length === 0}
-                    className="px-3 py-1.5 text-xs rounded-xl bg-transparent hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-white/80 hover:text-white transition-all duration-200 flex items-center space-x-1.5"
-                    title="Pré-visualizar arquivo"
-                  >
-                    <Eye className="w-4.5 h-4.5" />
-                    <span className="text-sm">Prévia</span>
-                  </button>
+                  {isPreviewOpen ? (
+                    <button
+                      onClick={() => setIsPreviewOpen(false)}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-transparent hover:bg-gray-500/20 text-white/80 hover:text-white flex items-center space-x-1.5"
+                      title="Fechar prévia"
+                    >
+                      <X className="w-4.5 h-4.5" />
+                      <span className="text-sm">Fechar</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleOpenPreview}
+                      disabled={getPreviewFiles().length === 0}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-transparent hover:bg-gray-500/20 disabled:opacity-40 disabled:cursor-not-allowed text-white/80 hover:text-white  flex items-center space-x-1.5"
+                      title="Pré-visualizar arquivo"
+                    >
+                      <Eye className="w-4.5 h-4.5" />
+                      <span className="text-sm">Prévia</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1167,7 +1243,7 @@ function ChatPage() {
                           <button
                             key={file.id}
                             onClick={() => handleFileSelect(file)}
-                            className={`w-full p-4 text-left hover:bg-white/10 transition-all duration-200 flex items-center space-x-3 group ${selectedFile?.id === file.id ? 'bg-amber-500/20' : ''} ${index !== 0 ? 'border-t border-white/10' : ''}`}
+                            className={`w-full p-4 text-left hover:bg-gray-500/20  flex items-center space-x-3 group ${selectedFile?.id === file.id ? 'bg-amber-500/20' : ''} ${index !== 0 ? 'border-t border-white/10' : ''}`}
                           >
                             <div className={`p-2 rounded-lg transition-colors ${selectedFile?.id === file.id ? 'bg-amber-500 text-white' : 'bg-white/10 text-gray-300 group-hover:bg-amber-500/30'}`}>
                               <FileText className="w-4 h-4" />
@@ -1190,7 +1266,7 @@ function ChatPage() {
                           <div key={institution} className={index !== 0 ? 'border-t border-white/10' : ''}>
                             <button
                               onClick={() => handleInstitutionSelect(institution)}
-                              className={`w-full p-4 text-left hover:bg-white/10 transition-all duration-200 ${selectedInstitution === institution ? 'bg-amber-500/20' : ''}`}
+                              className={`w-full p-4 text-left hover:bg-gray-500/20  ${selectedInstitution === institution ? 'bg-amber-500/20' : ''}`}
                             >
                               <div className="font-medium text-gray-300">{institution}</div>
                               <div className="text-sm text-gray-400">{getFilesForInstitution(institution).length} arquivo(s)</div>
@@ -1252,7 +1328,7 @@ function ChatPage() {
                             <button
                               key={file.id}
                               onClick={() => handleFileSelect(file)}
-                              className={`w-full p-4 text-left hover:bg-white/10 flex items-center space-x-3 group ${selectedFile?.id === file.id ? 'bg-amber-500/20' : ''} ${index !== 0 ? 'border-t border-white/10' : ''}`}
+                              className={`w-full p-4 text-left hover:bg-gray-500/20 flex items-center space-x-3 group ${selectedFile?.id === file.id ? 'bg-amber-500/20' : ''} ${index !== 0 ? 'border-t border-white/10' : ''}`}
                             >
                               <div className={`p-2 rounded-lg transition-colors ${selectedFile?.id === file.id ? 'bg-amber-500 text-white' : 'bg-white/10 text-gray-300 group-hover:bg-amber-500/30'}`}>
                                 <FileText className="w-4 h-4" />
@@ -1275,7 +1351,7 @@ function ChatPage() {
                             <div key={institution} className={index !== 0 ? 'border-t border-white/10' : ''}>
                               <button
                                 onClick={() => handleInstitutionSelect(institution)}
-                                className={`w-full p-4 text-left hover:bg-white/10 transition-all duration-200 ${selectedInstitution === institution ? 'bg-amber-500/20' : ''}`}
+                                className={`w-full p-4 text-left hover:bg-gray-500/20  ${selectedInstitution === institution ? 'bg-amber-500/20' : ''}`}
                               >
                                 <div className="font-medium text-gray-300">{institution}</div>
                                 <div className="text-sm text-gray-400">{getFilesForInstitution(institution).length} arquivo(s)</div>
@@ -1287,7 +1363,7 @@ function ChatPage() {
                                   {getFilesForInstitution(institution).map((file) => (
                                     <label
                                       key={file.id}
-                                      className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer transition-colors"
+                                      className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-500/20 cursor-pointer transition-colors"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <input
@@ -1481,24 +1557,23 @@ function ChatPage() {
         {/* Message Input */}
         <div className="relative flex space-x-3 flex-shrink-0 pt-2 max-w-3xl mx-auto w-full">
 
-
-          {/* Chart Guide Button */}
-          <div
-            onClick={() => setIsChartGuideOpen(true)}
-            className="absolute -left-7 bottom-4 text-amber-300 hover:text-amber-200 transition-colors cursor-pointer z-20"
-            title="Guia de Visualizações"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setIsChartGuideOpen(true);
-              }
-            }}
-          >
-            <HelpCircle className="w-4 h-4" />
-          </div>
           <div className="flex-1 relative">
+            {/* Chart Guide Button — top-right of the prompt balloon */}
+            <div
+              onClick={() => setIsChartGuideOpen(true)}
+              className="absolute top-5 right-[34px] text-amber-300/70 hover:text-amber-200 transition-colors cursor-pointer z-30"
+              title="Guia de Visualizações"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsChartGuideOpen(true);
+                }
+              }}
+            >
+              <HelpCircle className="w-4 h-4" />
+            </div>
             <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
@@ -1515,7 +1590,7 @@ function ChatPage() {
                 (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) ||
                 isLoading //aqui
               }
-              className="w-full p-5 pr-16 pb-16 rounded-3xl bg-zinc-800/90 text-white placeholder-white/50 backdrop-blur-md resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900/90 focus:border-zinc-900/90 transition-all duration-300 custom-scrollbar disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
+              className="w-full p-5 pr-10 pb-16 rounded-3xl bg-zinc-800/90 text-white placeholder-white/50 backdrop-blur-md resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900/90 focus:border-zinc-900/90 transition-all duration-300 custom-scrollbar disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
               rows={3}
             />
 
@@ -1523,7 +1598,7 @@ function ChatPage() {
               <div className="relative">
                 <button
                   onClick={() => setIsToolsDropdownOpen((prev) => !prev)}
-                  className="flex rounded-xl px-3 py-1.5 text-sm items-center space-x-1.5 bg-transparent hover:bg-gray-400/20 text-white/80"
+                  className="flex rounded-xl px-3 py-1.5 text-sm items-center space-x-1.5 bg-transparent hover:bg-gray-500/20 text-white/80"
                   disabled={isLoading}
                 >
                   <span>Ferramentas</span>
@@ -1541,7 +1616,7 @@ function ChatPage() {
                       }}
                       className={`w-full flex items-center space-x-2 text-left rounded-xl px-3 py-1.5 text-sm transition-colors ${imageGenSelected
                         ? 'text-amber-300 bg-amber-500/15'
-                        : 'text-white/90 hover:bg-white/10'
+                        : 'text-white/90 hover:bg-gray-500/20'
                         }`}
                     >
                       <Image className="w-4 h-4 text-amber-400" />
@@ -1587,9 +1662,21 @@ function ChatPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div> {/* end mx-auto */}
+      </div> {/* end chat section */}
 
-
+      {/* File Preview Side Panel */}
+      <FilePreviewPopup
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        files={getPreviewFiles()}
+        selectedFileId={previewFileId}
+        onFileSelect={handlePreviewFileSelect}
+        loading={previewLoading}
+        error={previewError}
+        headers={previewHeaders}
+        rows={previewRows}
+      />
 
       {/* Fixed right-edge scrollbar (DOM-ref driven, no React re-renders) */}
       <div ref={scrollTrackRef} className="fixed-scroll-track" style={{ display: 'none' }} onClick={handleTrackClick}>
@@ -1606,18 +1693,6 @@ function ChatPage() {
         onClose={() => setIsChartGuideOpen(false)}
       />
 
-      <FilePreviewPopup
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        files={getPreviewFiles()}
-        selectedFileId={previewFileId}
-        onFileSelect={handlePreviewFileSelect}
-        loading={previewLoading}
-        error={previewError}
-        headers={previewHeaders}
-        rows={previewRows}
-      />
-
       {/* Lightbox Modal */}
       {amplifiedImage && (
         <div
@@ -1627,14 +1702,14 @@ function ChatPage() {
           <div className="absolute top-6 right-6 flex items-center space-x-4">
             <button
               onClick={(e) => { e.stopPropagation(); handleDownloadImage(amplifiedImage); }}
-              className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md transition-all flex items-center space-x-2"
+              className="p-3 bg-white/10 hover:bg-gray-500/20 text-white rounded-xl backdrop-blur-md transition-all flex items-center space-x-2"
             >
               <Download className="w-5 h-5" />
               <span className="font-medium hidden sm:inline">Baixar</span>
             </button>
             <button
               onClick={() => setAmplifiedImage(null)}
-              className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md transition-all"
+              className="p-3 bg-white/10 hover:bg-gray-500/20 text-white rounded-xl backdrop-blur-md transition-all"
             >
               <X className="w-5 h-5" />
             </button>

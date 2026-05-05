@@ -57,7 +57,7 @@ export default function RegisterPage() {
     <main className="min-h-screen flex items-center justify-center bg-zinc-900 py-10 relative">
 
       {/* Card */}
-      <div className="w-full max-w-sm px-8 py-10 rounded-2xl bg-zinc-800/60 border border-zinc-700/50 shadow-2xl shadow-black/40">
+      <div className="w-full max-w-sm px-8 py-10 rounded-2xl bg-zinc-800/60 shadow-2xl shadow-black/40">
 
         {/* Header */}
         <div className="mb-8 text-center">

@@ -311,7 +311,7 @@ export function SearchPage() {
        <div className="relative">
         <button
          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-         className="w-full p-4 rounded-xl bg-black/40 text-white backdrop-blur-md hover:bg-black/50 transition-all duration-300 flex items-center justify-between group shadow-xl"
+         className="w-full p-4 rounded-xl bg-black/40 text-white backdrop-blur-md hover:bg-black/50 flex items-center justify-between group shadow-xl"
         >
          <div className="flex items-center space-x-3">
           <div className="p-2 rounded-lg bg-amber-500/30 group-hover:bg-amber-500/40 transition-colors shadow-lg">
@@ -334,7 +334,7 @@ export function SearchPage() {
               setSearchType(option.value);
               setIsDropdownOpen(false);
              }}
-             className={`w-full p-4 text-left hover:bg-white/10 transition-all duration-200 flex items-center space-x-3 group ${searchType === option.value ? 'bg-amber-500/20' : ''
+             className={`w-full p-4 text-left hover:bg-white/10 flex items-center space-x-3 group ${searchType === option.value ? 'bg-amber-500/20' : ''
               } ${index !== 0 ? 'border-t border-white/10' : ''}`}
             >
              <div className={`p-2 rounded-lg transition-colors ${searchType === option.value
