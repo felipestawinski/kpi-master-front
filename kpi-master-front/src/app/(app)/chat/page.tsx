@@ -9,7 +9,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, Download, Eye, Wrench, Image } from 'lucide-react';
 
 type ApiFile = {
-  id: number;
+  id: string;
   filename: string;
   institution: string;
   writer: string;
@@ -64,14 +64,14 @@ function ChatPage() {
   const [editedQuestions, setEditedQuestions] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState<SelectionMode>('files');
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
-  const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
+  const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
   const [isChartGuideOpen, setIsChartGuideOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [amplifiedImage, setAmplifiedImage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewFileId, setPreviewFileId] = useState<number | null>(null);
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewHeaders, setPreviewHeaders] = useState<string[]>([]);
@@ -439,7 +439,7 @@ function ChatPage() {
     return getFilesForInstitution(selectedInstitution).filter((file) => selectedFileIds.has(file.id));
   };
 
-  const loadFilePreview = async (fileId: number) => {
+  const loadFilePreview = async (fileId: string) => {
     const file = files.find((item) => item.id === fileId);
     if (!file) {
       setPreviewError('Arquivo não encontrado para pré-visualização.');
@@ -492,7 +492,7 @@ function ChatPage() {
     void loadFilePreview(targetFile.id);
   };
 
-  const handlePreviewFileSelect = (fileId: number) => {
+  const handlePreviewFileSelect = (fileId: string) => {
     setPreviewFileId(fileId);
     void loadFilePreview(fileId);
   };
@@ -520,7 +520,7 @@ function ChatPage() {
   };
 
   // Toggle file selection in multi-select mode
-  const toggleFileSelection = (fileId: number) => {
+  const toggleFileSelection = (fileId: string) => {
     const newSelection = new Set(selectedFileIds);
     if (newSelection.has(fileId)) {
       newSelection.delete(fileId);

@@ -4,7 +4,7 @@ import { X, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 type PreviewFile = {
- id: number;
+ id: string;
  filename: string;
  institution: string;
 };
@@ -13,8 +13,8 @@ type FilePreviewPopupProps = {
  isOpen: boolean;
  onClose: () => void;
  files: PreviewFile[];
- selectedFileId: number | null;
- onFileSelect: (fileId: number) => void;
+ selectedFileId: string | null;
+ onFileSelect: (fileId: string) => void;
  loading: boolean;
  error: string | null;
  headers: string[];
@@ -77,7 +77,7 @@ export default function FilePreviewPopup({
      <label className="block text-white/80 text-xs font-medium mb-2">Arquivo para pré-visualizar</label>
      <select
       value={selectedFileId ?? ''}
-      onChange={(e) => onFileSelect(Number(e.target.value))}
+      onChange={(e) => onFileSelect(e.target.value)}
       className="w-full p-2.5 rounded-lg bg-black/40 text-white border border-white/15 focus:outline-none focus:ring-2 focus:ring-amber-500/60 text-sm"
      >
       {files.map((file) => (

@@ -17,7 +17,7 @@ function SuccessToast({ message, onDone }: { message: string; onDone: () => void
 
  return (
   <div
-   className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-2xl backdrop-blur-xl ${exiting ? 'toast-exit' : 'toast-enter'}`}
+   className={`absolute top-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-2xl backdrop-blur-xl ${exiting ? 'toast-exit' : 'toast-enter'}`}
    style={{ background: 'rgba(16, 185, 129, 0.25)', border: '1px solid rgba(16, 185, 129, 0.35)' }}
   >
    <div className="p-1 rounded-full bg-emerald-500/40">
@@ -39,7 +39,7 @@ function ErrorToast({ message, onDone }: { message: string; onDone: () => void }
 
  return (
   <div
-   className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-2xl backdrop-blur-xl ${exiting ? 'toast-exit' : 'toast-enter'}`}
+   className={`absolute top-6 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-2xl backdrop-blur-xl ${exiting ? 'toast-exit' : 'toast-enter'}`}
    style={{ background: 'rgba(239, 68, 68, 0.25)', border: '1px solid rgba(239, 68, 68, 0.35)' }}
   >
    <div className="p-1 rounded-full bg-red-500/40">
@@ -210,7 +210,7 @@ export function UploadPage() {
  const previewUrl = file ? URL.createObjectURL(file) : null;
 
  return (
-  <div className="p-6 max-h-screen overflow-y-auto">
+  <div className="relative p-6 max-h-screen overflow-y-auto">
    {uploadSuccess && (
     <SuccessToast
      message="Arquivo enviado com sucesso!"
@@ -424,7 +424,7 @@ export function UploadPage() {
        onDragOver={onDragOver}
        onDragLeave={onDragLeave}
        className={[
-        'relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all duration-300',
+        'relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all duration-300 h-[280px] overflow-hidden',
         isDragging
          ? 'border-amber-400/70 bg-amber-500/20 scale-105'
          : 'border-white/30 hover:border-amber-400/50 hover:bg-white/5',
@@ -451,27 +451,27 @@ export function UploadPage() {
         </>
        ) : (
         <div className="w-full text-center fade-in">
-         <div className="flex items-center justify-center gap-6 mb-6">
+         <div className="flex items-center justify-center gap-4 mb-3">
           {isImage ? (
            <div className="relative">
             <img
              src={previewUrl!}
              alt="Preview"
-             className="h-24 w-24 rounded-xl object-cover ring-2 ring-amber-400/50 shadow-xl"
+             className="h-16 w-16 rounded-xl object-cover ring-2 ring-amber-400/50 shadow-xl"
             />
             <div className="absolute -top-2 -right-2 p-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 shadow-lg">
              <ImageIcon className="w-4 h-4 text-white" />
             </div>
            </div>
           ) : (
-           <div className="flex h-24 w-24 items-center justify-center rounded-xl bg-white/10 ring-2 ring-amber-400/50 shadow-xl backdrop-blur-sm">
-            <File className="h-12 w-12 text-amber-300" />
+           <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white/10 ring-2 ring-amber-400/50 shadow-xl backdrop-blur-sm">
+            <File className="h-8 w-8 text-amber-300" />
            </div>
           )}
          </div>
-         <div className="mb-6">
-          <div className="text-lg font-semibold text-white drop-shadow-lg mb-1">{file.name}</div>
-          <div className="text-sm text-white/60">{file.type || 'Unknown type'} • {formatBytes(file.size)}</div>
+         <div className="mb-3">
+           <div className="text-base font-semibold text-white drop-shadow-lg mb-0.5 truncate px-4">{file.name}</div>
+          <div className="text-xs text-white/60">{file.type || 'Unknown type'} • {formatBytes(file.size)}</div>
          </div>
          <div className="flex justify-center gap-3">
           <button
@@ -596,7 +596,7 @@ export function UploadPage() {
         'flex-1 px-6 py-4 rounded-xl font-semibold text-white shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3 text-lg',
         isUploading || !file || !filename.trim()
          ? 'bg-gray-500/30 cursor-not-allowed '
-         : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 hover:shadow-amber-500/50 hover:scale-105',
+         : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700',
        ].join(' ')}
       >
        {isUploading ? (

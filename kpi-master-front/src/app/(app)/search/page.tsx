@@ -2,10 +2,10 @@
 import { FaRegCalendar } from "react-icons/fa";
 import AuthGuard from '@/components/AuthGuard';
 import { useEffect, useState, useRef } from 'react';
-import { Search as SearchIcon, FileText, Building2, User, X, Download, Save, ChevronDown } from 'lucide-react';
+import { Search as SearchIcon, FileText, Building2, User, X, Download, Save, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ApiFile = {
- id: number;
+ id: string;
  filename: string;
  institution: string;
  writer: string;
@@ -34,6 +34,8 @@ export function SearchPage() {
  const [searchType, setSearchType] = useState<'filename' | 'institution' | 'writer'>('filename');
  const [isSearching, setIsSearching] = useState(false);
  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+ const [currentPage, setCurrentPage] = useState(0);
+ const FILES_PER_PAGE = 10;
 
  const [username, setUsername] = useState<string | null>(null);
  const [token, setToken] = useState<string | null>(null);
@@ -90,6 +92,7 @@ export function SearchPage() {
    if (!res.ok) throw new Error('Failed to load files.');
 
    setFiles(Array.isArray(data) ? data : []);
+   setCurrentPage(0);
   } catch (err: any) {
    setError(err.message || 'Error fetching files.');
   } finally {
@@ -132,6 +135,7 @@ export function SearchPage() {
    }
 
    setFiles(filesArray);
+   setCurrentPage(0);
   } catch (err: any) {
    setError(err.message || 'Error searching files.');
   } finally {
@@ -290,16 +294,6 @@ export function SearchPage() {
    `}</style>
 
    <div className="mx-auto max-w-7xl">
-    {/* Header Section */}
-    <div className="mb-6 fade-in">
-     <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-2xl">
-      Buscar Arquivos
-     </h1>
-     <p className="text-white/80 drop-shadow-lg">
-      Encontre arquivos por nome, instituição ou autor •{' '}
-      <span className="font-semibold text-amber-300">{username ?? '-'}</span>
-     </p>
-    </div>
 
     {/* Search Section */}
     <div className="mb-6 backdrop-blur-xl bg-black/40 rounded-2xl p-6 shadow-2xl slide-up overflow-visible relative z-20">
@@ -439,7 +433,11 @@ export function SearchPage() {
     )}
 
     {/* Files Table */}
-    {!loading && !error && files.length > 0 && (
+    {!loading && !error && files.length > 0 && (() => {
+     const totalPages = Math.ceil(files.length / FILES_PER_PAGE);
+     const paginatedFiles = files.slice(currentPage * FILES_PER_PAGE, (currentPage + 1) * FILES_PER_PAGE);
+     const startIndex = currentPage * FILES_PER_PAGE;
+     return (
      <div className="backdrop-blur-xl bg-black/40 rounded-2xl shadow-2xl overflow-hidden slide-up">
       <div className="px-6 py-4 border-b border-white/10 bg-black/20">
        <div className="flex items-center justify-between">
@@ -447,11 +445,36 @@ export function SearchPage() {
          <FileText className="w-4 h-4" />
          <span>{files.length} arquivo{files.length !== 1 ? 's' : ''} encontrado{files.length !== 1 ? 's' : ''}</span>
         </div>
-        {searchTerm && (
-         <div className="text-xs text-amber-300 drop-shadow-md">
-          Resultados para: "{searchTerm}"
-         </div>
-        )}
+        <div className="flex items-center space-x-4">
+         {searchTerm && (
+          <div className="text-xs text-amber-300 drop-shadow-md">
+           Resultados para: &quot;{searchTerm}&quot;
+          </div>
+         )}
+         {totalPages > 1 && (
+          <div className="flex items-center space-x-2">
+           <button
+            onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+            disabled={currentPage === 0}
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-white"
+            aria-label="Página anterior"
+           >
+            <ChevronLeft className="w-4 h-4" />
+           </button>
+           <span className="text-xs text-white/70 tabular-nums min-w-[60px] text-center">
+            {currentPage + 1} / {totalPages}
+           </span>
+           <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={currentPage === totalPages - 1}
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-white"
+            aria-label="Próxima página"
+           >
+            <ChevronRight className="w-4 h-4" />
+           </button>
+          </div>
+         )}
+        </div>
        </div>
       </div>
       <div className="overflow-x-auto custom-scrollbar">
@@ -487,10 +510,10 @@ export function SearchPage() {
          </tr>
         </thead>
         <tbody className="divide-y divide-white/10">
-         {files.map((f, index) => (
+         {paginatedFiles.map((f, index) => (
           <tr
            key={f.id}
-           className="hover:bg-white/10 transition-all duration-200 group"
+           className="hover:bg-white/10 group"
            style={{
             animation: `fadeIn 0.3s ease-out ${index * 0.05}s both`
            }}
@@ -519,8 +542,39 @@ export function SearchPage() {
         </tbody>
        </table>
       </div>
+      {totalPages > 1 && (
+       <div className="px-6 py-3 border-t border-white/10 bg-black/20 flex items-center justify-between">
+        <span className="text-xs text-white/50">
+         Mostrando {startIndex + 1}–{Math.min(startIndex + FILES_PER_PAGE, files.length)} de {files.length}
+        </span>
+        <div className="flex items-center space-x-2">
+         <button
+          onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+          disabled={currentPage === 0}
+          className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-white text-xs flex items-center space-x-1"
+          aria-label="Página anterior"
+         >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          <span>Anterior</span>
+         </button>
+         <span className="text-xs text-white/70 tabular-nums">
+          {currentPage + 1} / {totalPages}
+         </span>
+         <button
+          onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+          disabled={currentPage === totalPages - 1}
+          className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-white text-xs flex items-center space-x-1"
+          aria-label="Próxima página"
+         >
+          <span>Próxima</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+         </button>
+        </div>
+       </div>
+      )}
      </div>
-    )}
+     );
+    })()}
 
     {/* Analysis Image Section */}
     {analysisImage && (

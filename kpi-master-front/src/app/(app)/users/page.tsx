@@ -190,7 +190,7 @@ function UsersPage() {
          {users.map((user, index) => (
           <tr 
            key={user.id} 
-           className="hover:bg-white/10 transition-all duration-300 fade-in group"
+           className="hover:bg-white/10 fade-in group"
            style={{ animationDelay: `${index * 0.05}s` }}
           >
            <Td className="font-medium">
