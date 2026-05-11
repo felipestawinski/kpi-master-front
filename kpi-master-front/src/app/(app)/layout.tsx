@@ -3,6 +3,7 @@
 import Sidebar from '@/components/Sidebar';
 import OnboardingAssistant from '@/components/OnboardingAssistant';
 import TokenUsageBar from '@/components/TokenUsageBar';
+import GenerationNotification from '@/components/GenerationNotification';
 import { useEffect, useState } from 'react';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -36,6 +37,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
    {/* Token usage progress bar — visible on all authenticated pages */}
    <TokenUsageBar />
+
+   {/* Notification popup when generation is interrupted by navigation */}
+   <GenerationNotification />
   </div>
  );
 }

@@ -18,7 +18,7 @@ export default function MainPage() {
         stopLoading();
 
         const token = localStorage.getItem('token');
-        if (!token) {
+        if (!token) { 
             alert("User not logged in")
             router.push('/login');
             return;

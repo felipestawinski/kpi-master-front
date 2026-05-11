@@ -6,7 +6,7 @@ import FilePreviewPopup from '@/components/FilePreviewPopup';
 import ChatMessageBubble from '@/components/ChatMessageBubble';
 import type { ChatMessage } from '@/components/ChatMessageBubble';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { FileText, Send, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, Download, Eye, Wrench, Image } from 'lucide-react';
+import { FileText, Send, Square, ChevronDown, Edit2, Check, X, Trash2, HelpCircle, Download, Eye, Wrench, Image } from 'lucide-react';
 
 type ApiFile = {
   id: string;
@@ -78,7 +78,9 @@ function ChatPage() {
   const [previewRows, setPreviewRows] = useState<string[][]>([]);
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
   const [imageGenSelected, setImageGenSelected] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
+  const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -103,7 +105,7 @@ function ChatPage() {
   const showToast = (msg: string) => setToastMessage(msg);
 
   // Track if chat is active (has messages) to expand the chat area
-  const isChatActive = messages.length > 0 || isLoading;
+  const isChatActive = messages.length > 0 || isLoading || isGenerating;
 
   const scrollToBottom = () => {
     const el = messagesScrollRef.current;
@@ -637,8 +639,8 @@ function ChatPage() {
     // If generateChart is not explicitly passed, use the toggled imageGenSelected state
     const shouldGenerateChart = generateChart !== undefined ? generateChart : imageGenSelected;
     // Chart recommendation doesn't require text input
-    if (!chartRecommendation && (!inputMessage.trim() || isLoading)) return;
-    if (chartRecommendation && isLoading) return;
+    if (!chartRecommendation && (!inputMessage.trim() || isGenerating)) return;
+    if (chartRecommendation && isGenerating) return;
 
     // Check if we have any files to analyze
     const hasSelection = selectionMode === 'files' ? selectedFile : (selectedInstitution && selectedFileIds.size > 0);
@@ -660,6 +662,7 @@ function ChatPage() {
     const currentPrompt = chartRecommendation ? displayPrompt : inputMessage;
     setInputMessage('');
     setIsLoading(true);
+    setIsGenerating(true);
 
     // Save user message to MongoDB (fire-and-forget)
     const identifier = getChatIdentifier();
@@ -697,6 +700,9 @@ function ChatPage() {
         throw new Error(`Selecione no máximo ${MAX_FILES_PER_ANALYSIS_REQUEST} arquivos por análise.`);
       }
 
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       const res = await fetch('http://localhost:8080/analysis-gen', {
         method: 'POST',
         headers: {
@@ -711,7 +717,15 @@ function ChatPage() {
           chatId: identifier,
           forceRefresh: false,
           model: selectedModel,
+          // Send last 5 messages for conversation context (skip for chart requests)
+          ...(!shouldGenerateChart && !chartRecommendation && messages.length > 0 ? {
+            chatHistory: messages.slice(-5).map(m => ({
+              role: m.type === 'user' ? 'user' : 'assistant',
+              content: m.content || '',
+            })),
+          } : {}),
         }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -816,26 +830,64 @@ function ChatPage() {
         window.dispatchEvent(new Event('tokenUsageUpdated'));
       }
     } catch (err) {
-      const errorText = err instanceof Error && err.message
-        ? err.message
-        : 'Desculpe, ocorreu um erro ao processar sua pergunta.';
+      // Handle user-initiated or navigation-triggered cancellation
+      if (err instanceof Error && err.name === 'AbortError') {
+        // Only add cancellation message if no streaming content was shown yet
+        const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
+        const hasPartialStream = lastMsg?.type === 'assistant' && lastMsg?.content;
+        if (!hasPartialStream) {
+          setMessages(prev => {
+            // Check if partial content already exists in current state
+            const last = prev[prev.length - 1];
+            if (last?.type === 'assistant' && last?.content) return prev;
+            return [...prev, {
+              id: (Date.now() + 1).toString(),
+              type: 'assistant' as const,
+              content: 'Geração cancelada pelo usuário.',
+              timestamp: new Date(),
+            }];
+          });
+        }
+      } else {
+        const errorText = err instanceof Error && err.message
+          ? err.message
+          : 'Desculpe, ocorreu um erro ao processar sua pergunta.';
 
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: errorText,
-        timestamp: new Date(),
-      };
-      const finalMessages = [...updatedMessages, errorMessage];
-      setMessages(finalMessages);
-      if (identifier) {
-        saveChatMessageToAPI(identifier, errorMessage);
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: errorText,
+          timestamp: new Date(),
+        };
+        const finalMessages = [...updatedMessages, errorMessage];
+        setMessages(finalMessages);
+        if (identifier) {
+          saveChatMessageToAPI(identifier, errorMessage);
+        }
       }
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
       setImageGenSelected(false);
+      abortControllerRef.current = null;
     }
   };
+
+  const handleCancelGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  };
+
+  // Abort in-progress generation when navigating away from the chat page
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        window.dispatchEvent(new CustomEvent('generationInterrupted'));
+      }
+    };
+  }, []);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1588,7 +1640,7 @@ function ChatPage() {
               disabled={
                 (selectionMode === 'files' && !selectedFile) ||
                 (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) ||
-                isLoading //aqui
+                isGenerating
               }
               className="w-full p-5 pr-10 pb-16 rounded-3xl bg-zinc-800/90 text-white placeholder-white/50 backdrop-blur-md resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900/90 focus:border-zinc-900/90 transition-all duration-300 custom-scrollbar disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
               rows={3}
@@ -1599,7 +1651,7 @@ function ChatPage() {
                 <button
                   onClick={() => setIsToolsDropdownOpen((prev) => !prev)}
                   className="flex rounded-xl px-3 py-1.5 text-sm items-center space-x-1.5 bg-transparent hover:bg-gray-500/20 text-white/80"
-                  disabled={isLoading}
+                  disabled={isGenerating}
                 >
                   <span>Ferramentas</span>
                   <ChevronDown className={`w-4.5 h-4.5 transition-transform duration-200 ${isToolsDropdownOpen ? 'rotate-180' : ''}`} />
@@ -1645,20 +1697,30 @@ function ChatPage() {
             </div>
 
             <div className="absolute right-5 bottom-4 z-30">
-              <button
-                onClick={() => sendMessage()}
-                disabled={
-                  !inputMessage.trim() ||
-                  (selectionMode === 'files' && !selectedFile) ||
-                  (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0)) ||
-                  isLoading
-                }
-                className="w-11 h-11 bg-transparent disabled:opacity-40 disabled:cursor-not-allowed text-white/90 hover:text-white rounded-full flex items-center justify-center relative group"
-                title="Enviar"
-              >
-                <span className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-gray-400/20 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100"></span> {/*aqui*/}
-                <Send className="w-5 h-5 relative z-10" />
-              </button>
+              {isGenerating ? (
+                <button
+                  onClick={handleCancelGeneration}
+                  className="w-11 h-11 text-white/90 hover:text-white rounded-full flex items-center justify-center relative group"
+                  title="Cancelar geração"
+                >
+                  <span className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-red-500/20 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200"></span>
+                  <Square className="w-4 h-4 relative z-10 fill-current" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => sendMessage()}
+                  disabled={
+                    !inputMessage.trim() ||
+                    (selectionMode === 'files' && !selectedFile) ||
+                    (selectionMode === 'institutions' && (!selectedInstitution || selectedFileIds.size === 0))
+                  }
+                  className="w-11 h-11 bg-transparent disabled:opacity-40 disabled:cursor-not-allowed text-white/90 hover:text-white rounded-full flex items-center justify-center relative group"
+                  title="Enviar"
+                >
+                  <span className="absolute inset-0 m-auto w-11 h-11 rounded-full bg-gray-400/20 opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200"></span>
+                  <Send className="w-5 h-5 relative z-10" />
+                </button>
+              )}
             </div>
           </div>
         </div>
