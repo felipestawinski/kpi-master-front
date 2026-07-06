@@ -2,7 +2,7 @@
 import { FaRegCalendar } from "react-icons/fa";
 import AuthGuard from '@/components/AuthGuard';
 import { useEffect, useState, useRef } from 'react';
-import { Search as SearchIcon, FileText, Building2, User, X, Download, Save, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search as SearchIcon, FileText, Building2, User, Hash, Copy, Check, X, Download, Save, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type ApiFile = {
  id: string;
@@ -42,6 +42,21 @@ export function SearchPage() {
  const [analysisImage, setAnalysisImage] = useState<string | null>(null);
 
  const dropdownRef = useRef<HTMLDivElement>(null);
+ const [copiedCid, setCopiedCid] = useState<string | null>(null);
+
+ const extractCid = (fileAddress: string) => {
+  return fileAddress.split('/').pop() ?? '';
+ };
+
+ const handleCopyCid = async (cid: string) => {
+  try {
+   await navigator.clipboard.writeText(cid);
+   setCopiedCid(cid);
+   setTimeout(() => setCopiedCid(null), 2000);
+  } catch {
+   // fallback
+  }
+ };
 
  useEffect(() => {
   try {
@@ -291,6 +306,60 @@ export function SearchPage() {
     .dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
      background: rgba(255,255,255,0.85);
     }
+
+    .cid-cell {
+     position: relative;
+     cursor: pointer;
+    }
+
+    .cid-tooltip {
+     visibility: hidden;
+     opacity: 0;
+     position: absolute;
+     bottom: calc(100% + 8px);
+     left: 50%;
+     transform: translateX(-50%) translateY(4px);
+     background: rgba(0, 0, 0, 0.9);
+     backdrop-filter: blur(12px);
+     border: 1px solid rgba(251, 191, 36, 0.3);
+     color: #fbbf24;
+     padding: 8px 14px;
+     border-radius: 10px;
+     font-size: 12px;
+     font-family: monospace;
+     white-space: nowrap;
+     z-index: 50;
+     pointer-events: none;
+     transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .cid-tooltip::after {
+     content: '';
+     position: absolute;
+     top: 100%;
+     left: 50%;
+     transform: translateX(-50%);
+     border-width: 5px;
+     border-style: solid;
+     border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+    }
+
+    .cid-cell:hover .cid-tooltip {
+     visibility: visible;
+     opacity: 1;
+     transform: translateX(-50%) translateY(0);
+    }
+
+    .cid-copied {
+     background: rgba(16, 185, 129, 0.9) !important;
+     border-color: rgba(16, 185, 129, 0.5) !important;
+     color: white !important;
+    }
+
+    .cid-copied::after {
+     border-color: rgba(16, 185, 129, 0.9) transparent transparent transparent !important;
+    }
    `}</style>
 
    <div className="mx-auto max-w-7xl">
@@ -487,18 +556,12 @@ export function SearchPage() {
             <span>Nome</span>
            </div>
           </Th>
-          <Th>
-           <div className="flex items-center space-x-2">
-            <Building2 className="w-4 h-4" />
-            <span>Instituição</span>
-           </div>
-          </Th>
-          <Th>
-           <div className="flex items-center space-x-2">
-            <User className="w-4 h-4" />
-            <span>Autor</span>
-           </div>
-          </Th>
+           <Th>
+            <div className="flex items-center space-x-2">
+             <Hash className="w-4 h-4" />
+             <span>CID</span>
+            </div>
+           </Th>
           <Th>
            <div className="flex items-center space-x-2">
             <FaRegCalendar className="w-4 h-4" />
@@ -519,8 +582,31 @@ export function SearchPage() {
            }}
           >
            <Td className="font-medium text-white drop-shadow-md">{f.filename}</Td>
-           <Td className="drop-shadow-md">{f.institution}</Td>
-           <Td className="drop-shadow-md">{f.writer}</Td>
+            <Td>
+             {f.fileAddress ? (() => {
+              const cid = extractCid(f.fileAddress);
+              const isCopied = copiedCid === cid;
+              return (
+               <div
+                className="cid-cell inline-flex items-center gap-2 group/cid"
+                onClick={() => handleCopyCid(cid)}
+                title=""
+               >
+                <span className="font-mono text-xs text-amber-300/90 drop-shadow-md">
+                 {cid.substring(0, 20)}…
+                </span>
+                <span className={`transition-all duration-200 ${isCopied ? 'text-emerald-400' : 'text-white/30 group-hover/cid:text-amber-400'}`}>
+                 {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </span>
+                <div className={`cid-tooltip ${isCopied ? 'cid-copied' : ''}`}>
+                 {isCopied ? '✓ Copiado!' : cid}
+                </div>
+               </div>
+              );
+             })() : (
+              <span className="text-white/40">—</span>
+             )}
+            </Td>
            <Td className="drop-shadow-md">{formatDate(f.date)}</Td>
            <Td>
             {f.fileAddress ? (
